@@ -9,6 +9,8 @@ feeds:
 include:
   - webui
   - openflow
+  - fbwifi
+  - chilli-redirect
 
 packages:
   - kmod-batman-adv

@@ -1,3 +1,6 @@
+-- SPDX-License-Identifier: GPL-2.0-only
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
 -- FBWIFI Lua library
 -- function table
 local fbwifi = {}
@@ -8,9 +11,7 @@ local log = require("posix.syslog")
 local uci = require("uci")
 
 function fbwifi.gateway_token()
-
-	state = uci.cursor(nil, "/var/state")
-	token = state:get("fbwifi", "main", "gateway_token")
+	token = uci.get("fbwifi.main.gateway_token")
 	if token and string.len(token) > 0 then
 		return token
 	else
@@ -44,7 +45,7 @@ end
 
 local mac_to_purge=''
 function remove_client_by_mac(client)
-	state = uci.cursor(nil, "/var/state")
+	state = uci.cursor("/var/state", "/tmp/fbwifi")
 
 	for key, value in pairs(client) do
 		if
@@ -62,7 +63,7 @@ function fbwifi.instate_client_rule( token, client_mac )
 
 	log.syslog(log.LOG_INFO, "[fbwifi] Validating client "..client_mac)
 
-	state = uci.cursor(nil, "/var/state")
+	state = uci.cursor("/var/state", "/tmp/fbwifi")
 	state_name = "token_" .. token
 
 	RULE_COND="iptables -w -L FBWIFI_CLIENT_TO_INTERNET -t mangle | grep -i -q \"%s\""
@@ -90,8 +91,9 @@ function fbwifi.instate_client_rule( token, client_mac )
 		log.syslog(log.LOG_WARNING, string.format( "[fbwifi] Failed to update iptables (%s)", res ) )
 	end
 	log.syslog(log.LOG_INFO, "[fbwifi] "..RULE)
-	
+
 	state:save('fbwifi')
+	state:commit('fbwifi')
 end
 
 function fbwifi.revoke_client_rule( token )
@@ -103,7 +105,7 @@ function fbwifi.revoke_client_rule( token )
 
 	log.syslog(log.LOG_INFO, string.format( "[fbwifi] Invalidating token (%s)", token) )
 
-	state = uci.cursor(nil, "/var/state")
+	state = uci.cursor("/var/state", "/tmp/fbwifi")
 	state_name = "token_" .. token
 	
 	client_mac = state:get("fbwifi", state_name, "mac")
@@ -124,6 +126,7 @@ function fbwifi.revoke_client_rule( token )
 
 		state:delete("fbwifi", state_name)
 		state:save('fbwifi')
+		state:commit('fbwifi')
 	else
 		log.syslog(log.LOG_WARNING, string.format( "[fbwifi] Client MAC not found in DB (%s)", state_name ) )
 	end

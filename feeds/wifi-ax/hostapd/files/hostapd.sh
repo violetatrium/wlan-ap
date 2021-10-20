@@ -48,14 +48,17 @@ hostapd_append_wpa_key_mgmt() {
 		;;
 		eap192)
 			append wpa_key_mgmt "WPA-EAP-SUITE-B-192"
+			append wpa_key_mgmt "WPA-EAP-SHA256"
 			[ "${ieee80211r:-0}" -gt 0 ] && append wpa_key_mgmt "FT-EAP"
-			[ "${ieee80211w:-0}" -gt 0 ] && append wpa_key_mgmt "WPA-EAP-SHA256"
 		;;
-		eap-eap192)
-			append wpa_key_mgmt "WPA-EAP-SUITE-B-192"
+		eap-eap256)
 			append wpa_key_mgmt "WPA-EAP"
+			append wpa_key_mgmt "WPA-EAP-SHA256"
 			[ "${ieee80211r:-0}" -gt 0 ] && append wpa_key_mgmt "FT-EAP"
-			[ "${ieee80211w:-0}" -gt 0 ] && append wpa_key_mgmt "WPA-EAP-SHA256"
+		;;
+		eap256)
+			append wpa_key_mgmt "WPA-EAP-SHA256"
+			[ "${ieee80211r:-0}" -gt 0 ] && append wpa_key_mgmt "FT-EAP"
 		;;
 		sae)
 			append wpa_key_mgmt "SAE"
@@ -337,7 +340,7 @@ hostapd_common_add_bss_config() {
 
 	config_add_boolean hs20 disable_dgaf osen
 	config_add_int anqp_domain_id
-	config_add_int hs20_deauth_req_timeout
+	config_add_int hs20_deauth_req_timeout hs20_release
 	config_add_array hs20_oper_friendly_name
 	config_add_array osu_provider
 	config_add_array operator_icon
@@ -603,11 +606,11 @@ hostapd_set_bss_options() {
 	}
 
 	case "$auth_type" in
-		sae|owe|eap192|eap-eap192)
+		sae|owe|eap192|eap256)
 			set_default ieee80211w 2
 			set_default sae_require_mfp 1
 		;;
-		psk-sae)
+		psk-sae|eap-eap256)
 			set_default ieee80211w 1
 			set_default sae_require_mfp 1
 		;;
@@ -650,7 +653,7 @@ hostapd_set_bss_options() {
 			vlan_possible=1
 			wps_possible=1
 		;;
-		eap|eap192|eap-eap192)
+		eap|eap192|eap-eap256|eap256)
 			json_get_vars \
 				auth_server auth_secret auth_port \
 				dae_client dae_secret dae_port \
@@ -886,7 +889,16 @@ hostapd_set_bss_options() {
 				json_get_vars ieee80211w_mgmt_cipher ieee80211w_max_timeout ieee80211w_retry_timeout
 				append bss_conf "ieee80211w=$ieee80211w" "$N"
 				[ "$ieee80211w" -gt "0" ] && {
-					append bss_conf "group_mgmt_cipher=${ieee80211w_mgmt_cipher:-AES-128-CMAC}" "$N"
+					case "$auth_type" in
+					eap192)
+						append bss_conf "group_mgmt_cipher=BIP-GMAC-256" "$N"
+						append bss_conf "group_cipher=GCMP-256" "$N"
+						;;
+					*)
+						append bss_conf "group_mgmt_cipher=${ieee80211w_mgmt_cipher:-AES-128-CMAC}" "$N"
+						;;
+					esac
+
 					[ -n "$ieee80211w_max_timeout" ] && \
 						append bss_conf "assoc_sa_query_max_timeout=$ieee80211w_max_timeout" "$N"
 					[ -n "$ieee80211w_retry_timeout" ] && \
@@ -996,12 +1008,13 @@ hostapd_set_bss_options() {
 
 	local hs20 disable_dgaf osen anqp_domain_id hs20_deauth_req_timeout \
 		osu_ssid hs20_wan_metrics hs20_operating_class hs20_t_c_filename hs20_t_c_timestamp \
-		hs20_t_c_server_url
+		hs20_t_c_server_url hs20_release
 	json_get_vars hs20 disable_dgaf osen anqp_domain_id hs20_deauth_req_timeout \
 		osu_ssid hs20_wan_metrics hs20_operating_class hs20_t_c_filename hs20_t_c_timestamp \
-		hs20_t_c_server_url
+		hs20_t_c_server_url hs20_release
 
 	set_default hs20 0
+	set_default hs20_release  1
 	set_default disable_dgaf $hs20
 	set_default osen 0
 	set_default anqp_domain_id 0
@@ -1009,6 +1022,7 @@ hostapd_set_bss_options() {
 	if [ "$hs20" = "1" ]; then
 		append bss_conf "hs20=1" "$N"
 		append_hs20_icons
+		append bss_conf "hs20_release=$hs20_release" "$N"
 		append bss_conf "disable_dgaf=$disable_dgaf" "$N"
 		append bss_conf "osen=$osen" "$N"
 		append bss_conf "anqp_domain_id=$anqp_domain_id" "$N"
@@ -1167,7 +1181,7 @@ wpa_supplicant_set_fixed_freq() {
 	append network_data "frequency=$freq" "$N$T"
 	case "$htmode" in
 		NOHT) append network_data "disable_ht=1" "$N$T";;
-		HT20|VHT20) append network_data "disable_ht40=1" "$N$T";;
+		HT20|VHT20|HE20) append network_data "disable_ht40=1" "$N$T";;
 		HT40*|VHT40*|VHT80*|VHT160*) append network_data "ht40=1" "$N$T";;
 	esac
 	case "$htmode" in
@@ -1198,10 +1212,10 @@ wpa_supplicant_add_network() {
 		default_disabled
 
 	case "$auth_type" in
-		sae|owe|eap192|eap-eap192)
+		sae|owe|eap-eap256)
 			set_default ieee80211w 2
 		;;
-		psk-sae)
+		psk-sae|eap192|eap256)
 			set_default ieee80211w 1
 		;;
 	esac
@@ -1279,7 +1293,7 @@ wpa_supplicant_add_network() {
 			fi
 			append network_data "$passphrase" "$N$T"
 		;;
-		eap|eap192|eap-eap192)
+		eap|eap192|eap-eap256|eap256)
 			hostapd_append_wpa_key_mgmt
 			key_mgmt="$wpa_key_mgmt"
 
