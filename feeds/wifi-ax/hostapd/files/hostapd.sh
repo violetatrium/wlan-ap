@@ -114,6 +114,7 @@ hostapd_common_add_device_config() {
 
 	config_add_int airtime_mode
 
+	config_add_boolean rnr_beacon he_co_locate
 	hostapd_add_log_config
 }
 
@@ -125,7 +126,8 @@ hostapd_prepare_device_config() {
 
 	json_get_vars country country3 country_ie beacon_int:100 dtim_period:2 doth require_mode legacy_rates \
 		acs_chan_bias local_pwr_constraint spectrum_mgmt_required airtime_mode cell_density \
-		rts_threshold beacon_rate rssi_reject_assoc_rssi rssi_ignore_probe_request maxassoc
+		rts_threshold beacon_rate rssi_reject_assoc_rssi rssi_ignore_probe_request maxassoc \
+		he_co_locate rnr_beacon
 
 	hostapd_set_log_options base_cfg
 
@@ -135,6 +137,8 @@ hostapd_prepare_device_config() {
 	set_default legacy_rates 0
 	set_default airtime_mode 0
 	set_default cell_density 0
+	set_default he_co_locate 0
+	set_default rnr_beacon 0
 
 	[ -n "$country" ] && {
 		append base_cfg "country_code=$country" "$N"
@@ -227,6 +231,8 @@ hostapd_prepare_device_config() {
 	append base_cfg "dtim_period=$dtim_period" "$N"
 	[ "$airtime_mode" -gt 0 ] && append base_cfg "airtime_mode=$airtime_mode" "$N"
 	[ -n "$maxassoc" ] && append base_cfg "iface_max_num_sta=$maxassoc" "$N"
+	[ "$rnr_beacon" -gt 0 ] && append base_cfg "rnr_beacon=$rnr_beacon" "$N"
+	[ "$he_co_locate" -gt 0 ] && append base_cfg "he_co_locate=$he_co_locate" "$N"
 
 	json_get_values opts hostapd_options
 	for val in $opts; do
@@ -363,6 +369,8 @@ hostapd_common_add_bss_config() {
 
 	config_add_int eap_server
 	config_add_string eap_user_file ca_cert server_cert private_key private_key_passwd server_id
+
+	config_add_boolean ratelimit
 }
 
 hostapd_set_vlan_file() {
@@ -757,7 +765,7 @@ hostapd_set_bss_options() {
 	}
 
 	append bss_conf "ssid=$ssid" "$N"
-	[ -n "$network_bridge" ] && append bss_conf "bridge=$network_bridge" "$N"
+	[ -n "$network_bridge" ] && append bss_conf "bridge=$network_bridge${N}wds_bridge=" "$N"
 	[ -n "$network_ifname" ] && append bss_conf "snoop_iface=$network_ifname" "$N"
 	[ -n "$iapp_interface" ] && {
 		local ifname
@@ -986,7 +994,6 @@ hostapd_set_bss_options() {
 		[ -n "$iw_network_auth_type" ] && \
 			append bss_conf "network_auth_type=$iw_network_auth_type" "$N"
 		[ -n "$iw_gas_address3" ] && append bss_conf "gas_address3=$iw_gas_address3" "$N"
-		[ -n "$iw_qos_map_set" ] && append bss_conf "qos_map_set=$iw_qos_map_set" "$N"
 
 		json_for_each_item append_iw_roaming_consortium iw_roaming_consortium
 		json_for_each_item append_iw_anqp_elem iw_anqp_elem
@@ -1005,6 +1012,12 @@ hostapd_set_bss_options() {
 			append bss_conf "anqp_3gpp_cell_net=$iw_anqp_3gpp_cell_net_conf" "$N"
 	fi
 
+	set_default iw_qos_map_set 0,0,2,16,1,1,255,255,18,22,24,38,40,40,44,46,48,56
+	case "$iw_qos_map_set" in
+		*,*);;
+		*) iw_qos_map_set="";;
+	esac
+	[ -n "$iw_qos_map_set" ] && append bss_conf "qos_map_set=$iw_qos_map_set" "$N"
 
 	local hs20 disable_dgaf osen anqp_domain_id hs20_deauth_req_timeout \
 		osu_ssid hs20_wan_metrics hs20_operating_class hs20_t_c_filename hs20_t_c_timestamp \
