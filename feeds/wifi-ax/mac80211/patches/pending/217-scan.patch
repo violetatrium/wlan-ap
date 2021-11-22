@@ -1,0 +1,53 @@
+Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/mac.c
+===================================================================
+--- backports-20210222_001-4.4.60-b157d2276.orig/drivers/net/wireless/ath/ath11k/mac.c
++++ backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/mac.c
+@@ -3720,17 +3720,29 @@ static int ath11k_start_scan(struct ath1
+ 	return 0;
+ }
+ 
+-static void ath11k_mac_update_scan_params(struct cfg80211_scan_request *req,
++static void ath11k_mac_update_scan_params(struct ath11k_vif *arvif,
++					  struct cfg80211_scan_request *req,
+ 					  struct scan_req_params *arg)
+ {
+ 	int i;
+ 	struct chan_info *chan = &arg->chan_list.chan[0];
+ 	enum nl80211_band band;
+ 	enum nl80211_chan_width width;
++	enum wmi_phy_mode phy_mode = 0;
+ 
+ 	if (req->chandef) {
+ 		band = req->chandef->chan->band;
+ 		width = req->chandef->width;
++	} else {
++		struct cfg80211_chan_def def;
++
++		if (!ath11k_mac_vif_chan(arvif->vif, &def)) {
++			switch (def.chan->band) {
++		        case NL80211_BAND_5GHZ:
++				phy_mode = arvif->ar->cfr_phymode;
++		                break;
++			}
++		}
+ 	}
+ 
+ 	arg->chan_list.num_chan = req->n_channels;
+@@ -3739,6 +3751,8 @@ static void ath11k_mac_update_scan_param
+ 			chan[i].freq = req->channels[i]->center_freq;
+ 		if (req->chandef)
+ 			chan[i].phymode = ath11k_phymodes[band][width];
++		else if (phy_mode)
++			chan[i].phymode = phy_mode;
+ 	}
+ }
+ 
+@@ -3810,7 +3824,7 @@ static int ath11k_mac_op_hw_scan(struct
+ 	}
+ 
+ 	if (req->n_channels)
+-		ath11k_mac_update_scan_params(req, arg);
++		ath11k_mac_update_scan_params(arvif, req, arg);
+ 
+ 	if (req->chandef) {
+ 		arg->scan_f_wide_band = true;
