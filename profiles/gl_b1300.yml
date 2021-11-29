@@ -6,6 +6,7 @@ description: Build image for the glinet gl-b1300
 image: bin/targets/ipq40xx/generic/openwrt-ipq40xx-generic-glinet_gl-b1300-squashfs-sysupgrade.bin
 include:
   - ucentral-ap
+  - minim
 packages:
   - ath10k-firmware-qca4019-ct-htt
   - ath10k-firmware-qca9888-ct-htt
@@ -14,3 +15,8 @@ diffconfig: |
   # CONFIG_PACKAGE_ath10k-firmware-qca4019-ct is not set
   # CONFIG_PACKAGE_ath10k-firmware-qca9888-ct is not set
   # CONFIG_PACKAGE_ath10k-firmware-qca9984-ct is not set
+  # CONFIG_PACKAGE_wpad is not set
+  CONFIG_TARGET_ipq40xx_generic_DEVICE_glinet_gl-b1300-alec=y
+  CONFIG_VERSION_HWREV=""
+  CONFIG_VERSION_PRODUCT="gl_b1300"
+  CONFIG_PACKAGE_lldpd=y

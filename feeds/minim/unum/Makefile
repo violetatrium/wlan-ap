@@ -8,6 +8,12 @@ PKG_NAME:=unum
 PKG_VERSION:=v2
 PKG_RELEASE:=1
 
+PKG_SOURCE_URL=https://github.com/alrooney/unum-sdk.git
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_DATE:=2021-11-21
+PKG_SOURCE_VERSION:=bbccb10b0cd3500feccbbef22e27ea111c3d18eb
+PKG_MIRROR_HASH:=27a6143e16cef7fd78ab7ee993c2cad9d6f2c2de7c7095e6365da72ae1616186
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/unum
@@ -45,7 +51,8 @@ PKG_BUILD_DIR_FILES=$(PKG_BUILD_DIR)/files
 MAKE_PATH:=src/unum
 
 # Agent MODEL name for all the unum agent builds from LEDE w/ sources
-AGENT_MODEL_ID=openwifi_generic
+#AGENT_MODEL_ID=openwifi_generic
+AGENT_MODEL_ID=lede_generic
 
 # Trusted CA list location on the target
 AGENT_TRUSTED_CA_LIST=/etc/ssl/certs/unum-ca-certificates.crt
@@ -65,11 +72,11 @@ AGENT_SSH_MYKEY=$(AGENT_SSH_DIR)/id_rsa
 AGENT_SSH_KNOWN=$(AGENT_SSH_DIR)/known_hosts
 
 # Agent hardware ID for this particular hardware target/subtarget/device
-#ifeq ($(patsubst "%",%,$(CONFIG_VERSION_HWREV)),)
-#  AGENT_HARDWARE_ID=$(patsubst "%",%,$(CONFIG_VERSION_PRODUCT))
-#else
-#  AGENT_HARDWARE_ID=$(patsubst "%",%,$(CONFIG_VERSION_PRODUCT))_$(patsubst "%",%,$(CONFIG_VERSION_HWREV))
-#endif
+ifeq ($(patsubst "%",%,$(CONFIG_VERSION_HWREV)),)
+  AGENT_HARDWARE_ID=$(patsubst "%",%,$(CONFIG_VERSION_PRODUCT))
+else
+  AGENT_HARDWARE_ID=$(patsubst "%",%,$(CONFIG_VERSION_PRODUCT))_$(patsubst "%",%,$(CONFIG_VERSION_HWREV))
+endif
 
 # Agent version. This is based on time if just the agent package is
 # built. The normal firmware build overrides this w/ its version number.
@@ -104,15 +111,15 @@ RELEASE_FEATURES := $(subst $(space),$(comma),$(patsubst %,$(quote)%$(quote),$(R
 
 # This is needed to prevent polluting the source tree w/ LEDE build artefacts.
 # If pulling sources from external tarball this step is not needed.
-define Build/Prepare
-	echo "Preparing: $(PKG_NAME)"
-	mkdir -p "$(PKG_BUILD_DIR_UNUM)"
-	cd "$(PKG_BUILD_DIR)/src/unum" && find -xtype l -exec rm -f {} \;
-	cd "$(AGENT_SOURCE_DIR)" && find * -type d -exec mkdir -p "$(PKG_BUILD_DIR_UNUM)/{}" \;
-	cd "$(AGENT_SOURCE_DIR)" && find * \( -type f \) -exec ln -sf "$(AGENT_SOURCE_DIR)/{}" "$(PKG_BUILD_DIR_UNUM)/{}" \;
-	cd "$(AGENT_SOURCE_DIR)" && find * \( -type l \) -exec cp -avf "$(AGENT_SOURCE_DIR)/{}" "$(PKG_BUILD_DIR_UNUM)/{}" \;
-	ln -s "$(AGENT_FILES_DIR)" "$(PKG_BUILD_DIR_FILES)"
-endef
+#define Build/Prepare
+#	echo "Preparing: $(PKG_NAME)"
+#	mkdir -p "$(PKG_BUILD_DIR_UNUM)"
+#	cd "$(PKG_BUILD_DIR)/src/unum" && find -xtype l -exec rm -f {} \;
+#	cd "$(AGENT_SOURCE_DIR)" && find * -type d -exec mkdir -p "$(PKG_BUILD_DIR_UNUM)/{}" \;
+#	cd "$(AGENT_SOURCE_DIR)" && find * \( -type f \) -exec ln -sf "$(AGENT_SOURCE_DIR)/{}" "$(PKG_BUILD_DIR_UNUM)/{}" \;
+#	cd "$(AGENT_SOURCE_DIR)" && find * \( -type l \) -exec cp -avf "$(AGENT_SOURCE_DIR)/{}" "$(PKG_BUILD_DIR_UNUM)/{}" \;
+#	ln -s "$(AGENT_FILES_DIR)" "$(PKG_BUILD_DIR_FILES)"
+#endef
 
 # We do not have configure (stop LEDE from even trying it)
 define Build/Configure
