@@ -1,0 +1,35 @@
+From e5aa8bc107e42fcfb23d03715ca7b6425056cf0d Mon Sep 17 00:00:00 2001
+From: Venkat Chimata <venkatch@gmail.com>
+Date: Mon, 29 Nov 2021 23:53:18 +0530
+Subject: [PATCH] Minim Unum dependencies
+
+---
+ config/Config-build.in | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/config/Config-build.in b/config/Config-build.in
+index 342859b7c0..9eb65e5f3c 100644
+--- a/config/Config-build.in
++++ b/config/Config-build.in
+@@ -134,6 +134,18 @@ menu "Global build settings"
+ 		  Useful for release builds, so that kernel issues can be debugged offline
+ 		  later.
+ 
++	config VERSION_PRODUCT
++		string
++		prompt "Minim unum agent product name"
++		help
++		  This specifies the product name to pass to Minim's unum agent
++
++	config VERSION_HWREV
++		string
++		prompt "Minim unum agent hardware revision"
++		help
++		  This specifies the hardware version to pass to Minim's unum agent
++
+ 	menu "Kernel build options"
+ 
+ 	source "config/Config-kernel.in"
+-- 
+2.25.1
+
