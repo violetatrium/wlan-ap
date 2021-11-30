@@ -1,20 +1,21 @@
-From e5aa8bc107e42fcfb23d03715ca7b6425056cf0d Mon Sep 17 00:00:00 2001
+From 978f5ba35a6a27c3abc500f13704275456d524c0 Mon Sep 17 00:00:00 2001
 From: Venkat Chimata <venkatch@gmail.com>
-Date: Mon, 29 Nov 2021 23:53:18 +0530
+Date: Tue, 30 Nov 2021 10:26:13 +0530
 Subject: [PATCH] Minim Unum dependencies
 
 ---
- config/Config-build.in | 12 ++++++++++++
+ config/Config-devel.in | 12 ++++++++++++
  1 file changed, 12 insertions(+)
 
-diff --git a/config/Config-build.in b/config/Config-build.in
-index 342859b7c0..9eb65e5f3c 100644
---- a/config/Config-build.in
-+++ b/config/Config-build.in
-@@ -134,6 +134,18 @@ menu "Global build settings"
- 		  Useful for release builds, so that kernel issues can be debugged offline
- 		  later.
- 
+diff --git a/config/Config-devel.in b/config/Config-devel.in
+index 126462bfc3..1999cac934 100644
+--- a/config/Config-devel.in
++++ b/config/Config-devel.in
+@@ -136,3 +136,15 @@ menuconfig DEVEL
+ 		default "-fno-caller-saves"
+ 		help
+ 		  Extra target-independent optimizations to use when building for the target.
++
 +	config VERSION_PRODUCT
 +		string
 +		prompt "Minim unum agent product name"
@@ -26,10 +27,6 @@ index 342859b7c0..9eb65e5f3c 100644
 +		prompt "Minim unum agent hardware revision"
 +		help
 +		  This specifies the hardware version to pass to Minim's unum agent
-+
- 	menu "Kernel build options"
- 
- 	source "config/Config-kernel.in"
 -- 
 2.25.1
 
