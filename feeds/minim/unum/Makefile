@@ -8,11 +8,11 @@ PKG_NAME:=unum
 PKG_VERSION:=v2
 PKG_RELEASE:=1
 
-PKG_SOURCE_URL=https://github.com/alrooney/unum-sdk.git
+PKG_SOURCE_URL=https://github.com/MinimSecure/unum-sdk.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_DATE:=2021-11-21
-PKG_SOURCE_VERSION:=bbccb10b0cd3500feccbbef22e27ea111c3d18eb
-PKG_MIRROR_HASH:=27a6143e16cef7fd78ab7ee993c2cad9d6f2c2de7c7095e6365da72ae1616186
+PKG_SOURCE_DATE:=2021-12-02
+PKG_SOURCE_VERSION:=23dac68f71bc644efa806f072759a6b9928868d6
+PKG_MIRROR_HASH:=1782f62bf03823725728dbad9d0b55784066332c016766eba46a607efcc6f54a
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -108,18 +108,6 @@ uc = $(subst a,A,$(subst b,B,$(subst c,C,$(subst d,D,$(subst e,E,$(subst f,F,$(s
 RELEASE_FEATURES := $(sort $(strip $(RELEASE_FEATURES)))
 RELEASE_DEFINES := $(patsubst %,-DFEATURE_%,$(subst $(dash),$(under),$(call uc,$(RELEASE_FEATURES))))
 RELEASE_FEATURES := $(subst $(space),$(comma),$(patsubst %,$(quote)%$(quote),$(RELEASE_FEATURES)))
-
-# This is needed to prevent polluting the source tree w/ LEDE build artefacts.
-# If pulling sources from external tarball this step is not needed.
-#define Build/Prepare
-#	echo "Preparing: $(PKG_NAME)"
-#	mkdir -p "$(PKG_BUILD_DIR_UNUM)"
-#	cd "$(PKG_BUILD_DIR)/src/unum" && find -xtype l -exec rm -f {} \;
-#	cd "$(AGENT_SOURCE_DIR)" && find * -type d -exec mkdir -p "$(PKG_BUILD_DIR_UNUM)/{}" \;
-#	cd "$(AGENT_SOURCE_DIR)" && find * \( -type f \) -exec ln -sf "$(AGENT_SOURCE_DIR)/{}" "$(PKG_BUILD_DIR_UNUM)/{}" \;
-#	cd "$(AGENT_SOURCE_DIR)" && find * \( -type l \) -exec cp -avf "$(AGENT_SOURCE_DIR)/{}" "$(PKG_BUILD_DIR_UNUM)/{}" \;
-#	ln -s "$(AGENT_FILES_DIR)" "$(PKG_BUILD_DIR_FILES)"
-#endef
 
 # We do not have configure (stop LEDE from even trying it)
 define Build/Configure
