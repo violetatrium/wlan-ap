@@ -11,8 +11,8 @@ PKG_RELEASE:=1
 PKG_SOURCE_URL=https://github.com/MinimSecure/unum-sdk.git
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_DATE:=2021-12-02
-PKG_SOURCE_VERSION:=fff998456b55df218f674b51e41f78a6006d6789
-PKG_MIRROR_HASH:=e2466657cd2fea6e4b9f6a955c8e12c5617cda451835cdab56983967f8a6797b
+PKG_SOURCE_VERSION:=5a00746e91ebe454043334b0ac1c35a0729d1788
+PKG_MIRROR_HASH:=1a6a99fb3ec15f92b36aeeee5181365f9b6942d103191cbcab68f2ca9126464e
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -151,7 +151,6 @@ define Package/unum/install
 	# Agent init files
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR_FILES)/$(AGENT_MODEL_ID)/unum-updater.init $(1)/etc/init.d/unum-updater
-	$(INSTALL_BIN) $(PKG_BUILD_DIR_FILES)/$(AGENT_MODEL_ID)/unum-support.init $(1)/etc/init.d/unum-support
 	$(INSTALL_BIN) $(PKG_BUILD_DIR_FILES)/$(AGENT_MODEL_ID)/unum.init $(1)/etc/init.d/unum
 	$(INSTALL_DATA) $(PKG_BUILD_DIR_FILES)/$(AGENT_MODEL_ID)/unum.common $(1)$(AGENT_ETC_DIR)/unum.common
 	# LAN/WAN IP range overlap recovery scripts
