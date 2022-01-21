@@ -1,0 +1,26 @@
+From f4e3fded77cc7033e93938b88deaf02947cec2db Mon Sep 17 00:00:00 2001
+From: Venkat Chimata <venkatch@gmail.com>
+Date: Fri, 21 Jan 2022 11:45:21 +0530
+Subject: [PATCH] label mac address for Motorola MH7020
+
+---
+ target/linux/ipq40xx/base-files/etc/board.d/02_network | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/target/linux/ipq40xx/base-files/etc/board.d/02_network b/target/linux/ipq40xx/base-files/etc/board.d/02_network
+index 3dc4ada335..94b7e536ad 100755
+--- a/target/linux/ipq40xx/base-files/etc/board.d/02_network
++++ b/target/linux/ipq40xx/base-files/etc/board.d/02_network
+@@ -192,6 +192,9 @@ ipq40xx_setup_macs()
+ 		lan_mac=$(cat /sys/firmware/mikrotik/hard_config/mac_base)
+ 		label_mac="$lan_mac"
+ 		;;
++	motorola,mh7020)
++		label_mac=$(mtd_get_mac_ascii 0:APPSBLENV ethaddr)
++		;;
+ 	esac
+ 
+ 	[ -n "$lan_mac" ] && ucidef_set_interface_macaddr "lan" $lan_mac
+-- 
+2.25.1
+
