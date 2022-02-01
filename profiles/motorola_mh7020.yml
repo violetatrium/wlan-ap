@@ -5,7 +5,7 @@ subtarget: generic
 description: Build image for the Motorola MH7020
 image: bin/targets/ipq40xx/generic/openwrt-ipq40xx-generic-unielec_u4019-32m-squashfs-sysupgrade.bin
 include:
-  - ucentral-ap
+  - ucentral-minim-ap
   - minim
 packages:
   - ath10k-firmware-qca4019-ct-htt
