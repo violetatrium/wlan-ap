@@ -15,5 +15,7 @@ diffconfig: |
   # CONFIG_PACKAGE_ath10k-firmware-qca4019-ct is not set
   # CONFIG_PACKAGE_ath10k-firmware-qca9888-ct is not set
   # CONFIG_PACKAGE_ath10k-firmware-qca9984-ct is not set
+  # CONFIG_PACKAGE_maverick is not set
+  # CONFIG_PACKAGE_ucentral-schema is not set
   CONFIG_VERSION_PRODUCT="zoom_7020_openwifi"
   CONFIG_VERSION_HWREV=""
