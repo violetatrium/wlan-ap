@@ -126,6 +126,9 @@ qcom_setup_macs()
 		ucidef_set_network_device_mac eth1 $lan_mac
 		ucidef_set_label_macaddr $wan_mac
 		;;
+	motorola,q14)
+		true
+		;;
 	indio,um-310ax-v1|\
 	indio,um-510axp-v1|\
 	indio,um-510axm-v1|\
