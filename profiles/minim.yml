@@ -7,7 +7,7 @@ feeds:
 packages:
   - unum
   - minim-web-landing
-    #- minim-web-rpc
+  - minim-web-rpc
   - minim-openwifi-scripts
   - kmod-ipt-conntrack-extra
   - kmod-nf-nathelper
