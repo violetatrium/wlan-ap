@@ -1,0 +1,38 @@
+From 6ee0388954916442e2b92efd170db45a1243f3b7 Mon Sep 17 00:00:00 2001
+From: Sagar Jain <sagarj@minim.com>
+Date: Wed, 14 Dec 2022 22:57:46 +0530
+Subject: [PATCH 1/1] r14: Reset  indication in power led.
+
+SW-2878
+---
+ package/base-files/files/etc/rc.button/reset | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/package/base-files/files/etc/rc.button/reset b/package/base-files/files/etc/rc.button/reset
+index 2403122ad2..43ffae0a18 100755
+--- a/package/base-files/files/etc/rc.button/reset
++++ b/package/base-files/files/etc/rc.button/reset
+@@ -7,8 +7,9 @@ OVERLAY="$( grep ' /overlay ' /proc/mounts )"
+ case "$ACTION" in
+ pressed)
+ 	[ -z "$OVERLAY" ] && return 0
+-
+-	return 5
++	sleep 10
++	/sbin/leds.sh led_factory_defaults
++	return 10
+ ;;
+ timeout)
+ 	. /etc/diag.sh
+@@ -20,7 +21,7 @@ released)
+ 		echo "REBOOT" > /dev/console
+ 		sync
+ 		reboot
+-	elif [ "$SEEN" -ge 5 -a -n "$OVERLAY" ]
++	elif [ "$SEEN" -ge 10 -a -n "$OVERLAY" ]
+ 	then
+ 		echo "FACTORY RESET" > /dev/console
+ 		jffs2reset -y && reboot &
+-- 
+2.25.1
+
