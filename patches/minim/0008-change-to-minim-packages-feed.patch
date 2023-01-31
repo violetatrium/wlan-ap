@@ -1,0 +1,22 @@
+From bae03cdbeccb9806e15833b2aac3d3b1c0ad33c6 Mon Sep 17 00:00:00 2001
+From: Tom Keddie <tomk@minim.com>
+Date: Tue, 31 Jan 2023 09:14:45 -0800
+Subject: [PATCH] Change to minim packages feed
+
+---
+ feeds.conf.default | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/feeds.conf.default b/feeds.conf.default
+index 3d24cb7c27..ddc9999715 100644
+--- a/feeds.conf.default
++++ b/feeds.conf.default
+@@ -1,4 +1,4 @@
+-src-git packages https://git.openwrt.org/feed/packages.git;openwrt-21.02
++src-git packages https://github.com/violetatrium/openwrt-packages-minimos.git;openwrt-21.02-minimos
+ src-git routing https://git.openwrt.org/feed/routing.git;openwrt-21.02
+ src-git telephony https://git.openwrt.org/feed/telephony.git;openwrt-21.02
+ #src-link custom /usr/src/openwrt/custom-feed
+-- 
+2.25.1
+
