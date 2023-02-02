@@ -20,7 +20,6 @@ packages:
   - kmod-nf-nathelper
   - kmod-nf-nathelper-extra
   - minim-web-admin
-  #- px5g-standalone
   - openssl-util
 diffconfig: |
   CONFIG_IMAGEOPT=y
