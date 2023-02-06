@@ -9,7 +9,6 @@ feeds:
     path: ../../feeds/ipq807x
 include:
   - wifi-ax
-  - ucentral-ap
   - minim
 packages:
   - e2fsprogs
@@ -19,3 +18,8 @@ diffconfig: |
   CONFIG_KERNEL_IPQ_MEM_PROFILE=512
   CONFIG_VERSION_PRODUCT="minim_q14_openwifi"
   CONFIG_VERSION_HWREV=""
+  # CONFIG_PACKAGE_wpad is not set
+  CONFIG_PACKAGE_wpad-openssl=y
+  CONFIG_LIBCURL_OPENSSL=y
+  # CONFIG_LIBCURL_WOLFSSL is not set
+  # CONFIG_PACKAGE_libwolfssl is not set
