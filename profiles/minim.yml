@@ -35,6 +35,7 @@ packages:
   - ppp-mod-pppoe
   - ppp
   - libustream-openssl
+  - coreutils
 diffconfig: |
   CONFIG_IMAGEOPT=y
   CONFIG_VERSIONOPT=y
