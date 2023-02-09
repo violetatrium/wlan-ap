@@ -1,5 +1,33 @@
 #!/bin/sh
 
+wps_flash_leds() {
+	local ubusobjs=$1
+	local finished=0
+
+	STATE=$(/sbin/leds.sh led_get_state)
+
+	/sbin/leds.sh led_wps
+
+	. /usr/share/libubox/jshn.sh
+	while [ $finished -eq 0 ]; do
+		for ubusobj in $ubusobjs; do
+			json_init
+			json_load "$(ubus -S call $ubusobj wps_status)"
+			json_get_vars pbc_status
+			[ "$pbc_status" = "Timed-out" -o "$pbc_status" = "Disabled" ] && {
+				finished=1
+			}
+		done
+		sleep 1
+	done
+	if [ "$STATE" = "led_actions_off" ] ; then
+                /sbin/leds.sh led_off
+        else
+                /sbin/leds.sh $STATE
+        fi
+
+}
+
 wps_catch_credentials() {
 	local iface ifaces ifc ifname ssid encryption key radio radios
 	local found=0
@@ -38,25 +66,14 @@ wps_catch_credentials() {
 	done
 }
 
-if [ "$ACTION" = "pressed" -a "$BUTTON" = "wps" ]; then
+if [ "$ACTION" = "released" ] && [ "$BUTTON" = "wps" ]; then
 	wps_done=0
 	ubusobjs="$( ubus -S list hostapd.* )"
 	for ubusobj in $ubusobjs; do
 		ubus -S call $ubusobj wps_start && wps_done=1
 	done
-	[ $wps_done = 0 ] || return 0
-	wps_done=0
-	ubusobjs="$( ubus -S list wpa_supplicant.* )"
-	for ubusobj in $ubusobjs; do
-		ifname="$(echo $ubusobj | cut -d'.' -f2 )"
-		multi_ap=""
-		if [ -e "/var/run/wpa_supplicant-${ifname}.conf.is_multiap" ]; then
-			ubus -S call $ubusobj wps_start '{ "multi_ap": true }' && wps_done=1
-		else
-			ubus -S call $ubusobj wps_start && wps_done=1
-		fi
-	done
-	[ $wps_done = 0 ] || wps_catch_credentials &
+
+	[ $wps_done = 0 ] || wps_flash_leds "$ubusobjs" &
 fi
 
 return 0
