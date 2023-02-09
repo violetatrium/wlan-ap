@@ -20,12 +20,11 @@ wps_flash_leds() {
 		done
 		sleep 1
 	done
-	if [ "$STATE" = "led_actions_off" ] ; then
-                /sbin/leds.sh led_off
+	if [ "$STATE" = "led_off" ] ; then
+                /sbin/leds.sh led_wlan_off
         else
-                /sbin/leds.sh $STATE
+                /sbin/leds.sh led_wlan
         fi
-
 }
 
 wps_catch_credentials() {
