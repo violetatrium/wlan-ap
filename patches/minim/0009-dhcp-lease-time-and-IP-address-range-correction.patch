@@ -25,7 +25,7 @@ index e609e04859..d650682347 100644
 +	option leasetime	24h
  	option dhcpv6 server
  	option ra server
- 	option ra_flags 'managed-config other-config'
+ 
 -- 
 2.25.1
 
