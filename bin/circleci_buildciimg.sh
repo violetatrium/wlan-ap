@@ -44,10 +44,10 @@ function authenticate_ecr() {
 }
 
 function calculate_content_hash() {
-  # The spec_integration/factories is actually a symlink to a directory, which
+  # The mediatek_sdk folder is actually a symlink to a directory, which
   # can't be hashed and thus is filtered out.
   git ls-files \
-    | grep -v 'spec_integration/factories' \
+    | grep -v mediatek_sdk \
     | sort \
     | xargs sha1sum \
     | sha1sum \
@@ -109,7 +109,7 @@ echo 'Unable to find existing tagged image, building a new one...'
 
 # The image doesn't exist anywhere, build it from scratch and push the appropriate tags
 
-docker build -t ${CONTENT_REVISION_NAME} -f Dockerfile . --build-arg MAXMIND_LICENSE_KEY=$MAXMIND_LICENSE_KEY
+docker build -t ${CONTENT_REVISION_NAME} -f Dockerfile . 
 
 echo 'Pushing image and content tag...'
 docker push ${CONTENT_REVISION_NAME}
