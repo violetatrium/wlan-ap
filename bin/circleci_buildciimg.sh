@@ -33,7 +33,9 @@ function podman_available() {
 function authenticate_ecr() {
   local login_cmd=$(aws ecr get-login --region us-east-1 --no-include-email)
 
-  login_cmd=$(echo $login_cmd | docker)
+  # note: removed a conditional here that would replace "docker" in the output of the above 
+  # line with "podman" because the script has alias'd podman. this _might_ not work right
+  # if you execute this locally and use podman.
 
   AWS_REPOSITORY_USER="$(echo $login_cmd | cut -d ' ' -f 4)"
   AWS_REPOSITORY_PASS="$(echo $login_cmd | cut -d ' ' -f 6)"
