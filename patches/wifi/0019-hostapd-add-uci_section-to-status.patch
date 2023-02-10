@@ -7,8 +7,7 @@ Signed-off-by: John Crispin <john@phrozen.org>
 ---
  .../network/services/hostapd/files/hostapd.sh |  6 ++-
  .../hostapd/patches/901-cfg-section.patch     | 51 +++++++++++++++++++
- package/network/services/uhttpd/Makefile      |  1 +
- 3 files changed, 57 insertions(+), 1 deletion(-)
+ 2 files changed, 57 insertions(+), 1 deletion(-)
  create mode 100644 package/network/services/hostapd/patches/901-cfg-section.patch
 
 diff --git a/package/network/services/hostapd/files/hostapd.sh b/package/network/services/hostapd/files/hostapd.sh
@@ -99,18 +98,6 @@ index 0000000000..dcfdd658fe
 + 	os_free(conf->config_id);
 + 	os_free(conf->ca_cert);
 + 	os_free(conf->server_cert);
-diff --git a/package/network/services/uhttpd/Makefile b/package/network/services/uhttpd/Makefile
-index 0ae076ca8b..a3fd2a84d9 100644
---- a/package/network/services/uhttpd/Makefile
-+++ b/package/network/services/uhttpd/Makefile
-@@ -12,6 +12,7 @@ PKG_RELEASE:=1
- 
- PKG_SOURCE_PROTO:=git
- PKG_SOURCE_URL=$(PROJECT_GIT)/project/uhttpd.git
-+PKG_MIRROR_HASH:=90f737663d8495b891f0364342efb06f548a82c26ddb1595e42752f7cecdccee
- PKG_SOURCE_DATE:=2022-06-01
- PKG_SOURCE_VERSION:=e3395cd90bed9b7b9fc319e79528fedcc0d947fe
- PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 -- 
 2.25.1
 
