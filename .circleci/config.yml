@@ -22,7 +22,7 @@ jobs:
       # Build a docker image with all the openwrt prereqs for the next steps
       - run: sudo apt-get update && sudo apt-get install awscli -y && sudo apt-get clean
       - setup_remote_docker:
-          version: 19.03.13
+          version: 20.10.18
           docker_layer_caching: true
       - run: ./bin/circleci_buildciimg.sh
   build:
