@@ -32,6 +32,7 @@ jobs:
         type: string
     docker:
       - image: 674914898519.dkr.ecr.us-east-1.amazonaws.com/violetatrium/wlan-ap:ci-rev-${CIRCLE_SHA1}
+    resource_class: xlarge
     steps:
       - checkout
       - run: ./setup.py --setup
@@ -42,7 +43,7 @@ jobs:
             cd openwrt
             ./scripts/gen_config.py << parameters.device >>
             make download -j$(nproc) -f ./Makefile
-            make -j$(nproc) -f ./Makefile
+            make V=s -j$(nproc) -f ./Makefile
       - run: mkdir ./<< parameters.device >>
       - run: ./bin/circleci_archivebuild.sh << parameters.device >>
       - store_artifacts:
