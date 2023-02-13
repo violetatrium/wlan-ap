@@ -11,7 +11,7 @@ workflows:
           matrix:
             parameters:
               device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
-          #context: deployable-service
+          context: deployable-service
 
 jobs:
   prepare_cimg:
