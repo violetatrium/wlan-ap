@@ -34,9 +34,14 @@ jobs:
     steps:
       - checkout
       - run: ./setup.py --setup
-      - run: ./openwrt/scripts/gen_config.py << parameters.device >>
-      - run: make download -j$(nproc) -f ./openwrt/Makefile
-      - run: make -j$(nproc) -f ./openwrt/Makefile
+      - run: 
+          name: "Build OpenWRT configuration"
+          no_output_timeout: 120m
+          command : | 
+            cd openwrt
+            ./scripts/gen_config.py << parameters.device >>
+            make download -j$(nproc) -f ./Makefile
+            make -j$(nproc) -f ./Makefile
       - run: mkdir ./<< parameters.device >>
       - run: ./bin/circleci_archivebuild.sh << parameters.device >>
       - store_artifacts:
