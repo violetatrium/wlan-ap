@@ -24,6 +24,7 @@ jobs:
       - setup_remote_docker:
           version: 20.10.18
           docker_layer_caching: true
+      # This script uses AWS CLI v1 (installed above). We could use cimg/aws runner if we improved the ECR login in here.
       - run: ./bin/circleci_buildciimg.sh
   build:
     parameters:
