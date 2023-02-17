@@ -6,8 +6,9 @@ set -o nounset
 
 DEVICE=$1
 GIT_REVISION="${CIRCLE_SHA1:-$(git rev-parse HEAD)}"
+BUILD_NUM="${CIRCLE_BUILD_NUM}"
 
-VERSION=$(cat base_version)-$GIT_REVISION
+VERSION=$(cat ./version)
 eval $(grep CONFIG_TARGET_BOARD= openwrt/.config)
 echo "Config target board = $CONFIG_TARGET_BOARD"
 eval $(grep CONFIG_TARGET_SUBTARGET= openwrt/.config)

@@ -2,6 +2,7 @@
 version: 2.1
 workflows:
   build:
+    # Uncomment the filters to only run builds for this on the main branch
     jobs:
       - prepare_cimg:
           context: deployable-service
@@ -12,11 +13,49 @@ workflows:
             parameters:
               device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
           context: deployable-service
+#          filters:
+#            branches:
+#              only:
+#                - mh7020-v2.6.0-minim
+      # Add manual approval so we can decide when we want to push the builds
+      - promote_check:
+          type: approval
+          name: promote-check-<< matrix.device >>
+          requires:
+            - build-<< matrix.device >>
+          matrix:
+            parameters:
+              device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
+#          filters:
+#            branches:
+#              only:
+#                - mh7020-v2.6.0-minim
+      - promote:
+          name: promote-<< matrix.device >>
+          requires:
+            - promote-check-<< matrix.device >>
+          matrix:
+            parameters:
+              device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
+          context: minimos
+#          filters:
+#            branches:
+#              only:
+#                - mh7020-v2.6.0-minim
+      - tag:
+          name: tag
+          requires: 
+            - promote
+#          filters:
+#            branches:
+#              only:
+#                - mh7020-v2.6.0-minim
 
 jobs:
   prepare_cimg:
     docker:
       - image: cimg/base:2023.02
+    working_directory: ~/project
     steps:
       - checkout
       # Build a docker image with all the openwrt prereqs for the next steps
@@ -26,6 +65,12 @@ jobs:
           docker_layer_caching: true
       # This script uses AWS CLI v1 (installed above). We could use cimg/aws runner if we improved the ECR login in here.
       - run: ./bin/circleci_buildciimg.sh
+      - run: echo $(cat base_version).$CIRCLE_BUILD_NUM > ./version
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - version
+  # Since build takes so long, we might consider skipping a rebuild if the tag already exists?
   build:
     parameters:
       device:
@@ -35,6 +80,8 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/project
       - run: ./setup.py --setup
       - run: 
           name: "Build OpenWRT configuration"
@@ -48,3 +95,49 @@ jobs:
       - run: ./bin/circleci_archivebuild.sh << parameters.device >>
       - store_artifacts:
           path: ./<< parameters.device >>
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - << parameters.device >>/*
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - openwrt/.config
+            - openwrt/feeds/minim/unum/Makefile
+  promote:
+    parameters:
+      device:
+        type: string
+    docker:
+      - image: cimg/base:2023.02
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/project
+      - run: ./bin/circleci_promotebuild.sh << parameters.device >>
+  tag:
+    docker:
+      - image: cimg/base:2023.02
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/project
+        # should be no need to reset this repo from former steps since each job is a fresh filesystem
+      - run: git clone git@github.com:violetatrium/unum-sdk --branch master
+      - run: |
+          BASE_VERSION=$(cat base_version)
+          VERSION=$(cat version)
+
+          TAGS=`git tag --points-at HEAD`
+          if echo $TAGS | grep -Fqv "MINIM_OS_$BASE_VERSION" ; then
+              git tag "MINIM_OS_$VERSION"
+              git push origin MINIM_OS_$VERSION
+          fi
+
+          cd unum-sdk
+
+          TAGS=`git tag --points-at HEAD`
+          if echo \$TAGS | grep -Fqv "MINIM_OS_$BASE_VERSION" ; then
+              git tag "MINIM_OS_$VERSION"
+              git push origin MINIM_OS_$VERSION
+          fi
