@@ -105,6 +105,8 @@ jobs:
             - openwrt/.config
             - openwrt/feeds/minim/unum/Makefile
   promote:
+    # use circle's dedicated IP ranges so we can whitelist them on our releases server.
+    circleci_ip_ranges: true
     parameters:
       device:
         type: string

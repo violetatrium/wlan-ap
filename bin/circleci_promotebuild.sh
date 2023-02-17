@@ -26,11 +26,14 @@ echo $RELEASE_PROP
 echo $PROVISION_FILE
 echo $REVISIONS
 
-username="build-server"
+username="circleci-build"
 author="jenkins"
 
-# We could make it use the other server if the branch is not whichever branch is "master"
+# make it use the other server if the branch is not whichever branch is "master"
 server="releases.minim.co"
+if [ ! $(git rev-parse --abbrev-ref HEAD | grep -q mh7020-v2.6.0-minim) ] then
+  server="releases.stg-kcmh-a-1.minim.co"
+fi 
 
 SYSUPGRADE=
 if [ -f $UPGRADE_FILE ]; then
