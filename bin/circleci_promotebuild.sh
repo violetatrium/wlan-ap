@@ -6,6 +6,7 @@ set -o pipefail
 set -o nounset
 
 DEVICE=$1
+DEFAULT_BRANCH=$2
 
 VERSION=$(cat ./version)
 eval $(grep CONFIG_VERSION_PRODUCT= openwrt/.config)
@@ -32,7 +33,7 @@ author="circleci"
 server="releases.minim.co"
 # make it use the server on staging if the branch is not whichever branch is "master"
 # Change the grep command if we want to set a different branch as "master"
-if [ ! $(git rev-parse --abbrev-ref HEAD | grep -q mh7020-v2.6.0-minim) ]; then
+if [ ! $(git rev-parse --abbrev-ref HEAD | grep -q $DEFAULT_BRANCH) ]; then
   server="releases.stg-kcmh-a-1.minim.co"
 fi 
 

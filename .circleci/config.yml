@@ -1,56 +1,65 @@
 ---
 version: 2.1
+
+parameters:
+  # This is the branch that this pipeline will build. Set this to your
+  # "master" branch for your repository.
+  build-branch:
+    type: string
+    default: "mh7020-v2.6.0-minim"
+
 workflows:
   build:
     # Uncomment the filters to only run builds for this on the main branch
     jobs:
+      # Set the version and make the build agent
       - prepare_cimg:
           context: deployable-service
+      # Build openWRT configurations
       - build:
           requires:
             - prepare_cimg
+          # Adjust the matrix parameters to add/remove devices
           matrix:
             parameters:
-              device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
+              #device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
+              device: ["motorola_q14", "motorola_r14"]
           context: deployable-service
-#          filters:
-#            branches:
-#              only:
-#                - mh7020-v2.6.0-minim
-      # Add manual approval so we can decide when we want to push the builds
-      - promote_check:
-          type: approval
-          name: promote-check-<< matrix.device >>
+          # Add more branches to these filter blocks if you want to build more branches
+          # They include the "master branch" from the parameter above by default
+          filters:
+            branches:
+              only:
+                - << pipeline.parameters.build-branch >>
+                - SW-3301
+      # Push builds to the releases feed
+      - promote:
+          name: promote-<< matrix.device >>
           requires:
             - build-<< matrix.device >>
           matrix:
             parameters:
-              device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
-#          filters:
-#            branches:
-#              only:
-#                - mh7020-v2.6.0-minim
-      - promote:
-          name: promote-<< matrix.device >>
-          requires:
-            - promote-check-<< matrix.device >>
-          matrix:
-            parameters:
-              device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
+              #device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
+              device: ["motorola_q14", "motorola_r14"]
           context: minimos
-#          filters:
-#            branches:
-#              only:
-#                - mh7020-v2.6.0-minim
+          filters:
+            branches:
+              only:
+                - << pipeline.parameters.build-branch >>
+                - SW-3301
+      # Tag the wlan-ap and unum-sdk repos with the version
       - tag:
           name: tag
           requires: 
             - promote
-#          filters:
-#            branches:
-#              only:
-#                - mh7020-v2.6.0-minim
+          filters:
+            branches:
+              only:
+                - << pipeline.parameters.build-branch >>
+                - SW-3301
 
+# Every job is a new filesystem
+# Every "run" step is a new shell
 jobs:
   prepare_cimg:
     docker:
@@ -92,6 +101,7 @@ jobs:
           name: "Build OpenWRT configuration"
           no_output_timeout: 120m
           command : | 
+            export AGENT_VERSION=$(cat version)
             cd openwrt
             ./scripts/gen_config.py << parameters.device >>
             make download -j$(nproc) -f ./Makefile
@@ -124,7 +134,7 @@ jobs:
       # Load the shared workspace so we can push stuff for it
       - attach_workspace:
           at: ~/project
-      - run: ./bin/circleci_promotebuild.sh << parameters.device >>
+      - run: ./bin/circleci_promotebuild.sh << parameters.device >> << pipeline.parameters.build-branch >>
   tag:
     docker:
       - image: cimg/base:2023.02
