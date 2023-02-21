@@ -1,5 +1,5 @@
 #!/bin/bash -x
-
+# Edited this script from the violetatrium/embedded-tools repo. Removed any non-required logic.
 set -o errexit
 set -o errtrace
 set -o pipefail
@@ -18,7 +18,7 @@ RELEASE_PROP=$DEVICE/release_properties.json
 PROVISION_FILE=$DEVICE/$DEVICE-factory-$VERSION.bin
 REVISIONS=wlan-ap:${WLANAP_SHA:0:8}/unum-sdk:${AGENT_SHA:0:8}
 
-#echo $RELEASES_PASSWORD
+# RELEASES_PASSWORD is pulled from the circleci context.
 echo $HARDWARE_ID
 echo $FIRMWARE_VERSION
 echo $UPGRADE_FILE
@@ -27,10 +27,11 @@ echo $PROVISION_FILE
 echo $REVISIONS
 
 username="circleci-build"
-author="jenkins"
+author="circleci"
 
-# make it use the other server if the branch is not whichever branch is "master"
 server="releases.minim.co"
+# make it use the server on staging if the branch is not whichever branch is "master"
+# Change the grep command if we want to set a different branch as "master"
 if [ ! $(git rev-parse --abbrev-ref HEAD | grep -q mh7020-v2.6.0-minim) ]; then
   server="releases.stg-kcmh-a-1.minim.co"
 fi 
@@ -53,5 +54,7 @@ if [ ! -f "$file_path" ]; then
 fi
 
 endpoint="https://$server/release_server/releases"
-# consider turning off shell history here for password security
+# Temporarily turn off shell history here for password security
+set +o history
 curl --retry 5 --retry-delay 10 -v --url "$endpoint" --fail --user "$username:$RELEASES_PASSWORD" $SYSUPGRADE $RELEASE_PROPS --form "release[factory_image]=@$file_path" --form "release[version_string]=$FIRMWARE_VERSION" --form "release[author]=$author" --form "release[git_sha]=$git_sha" --form "release[kind]=$HARDWARE_ID"
+set -o history

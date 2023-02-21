@@ -60,11 +60,15 @@ jobs:
       - checkout
       # Build a docker image with all the openwrt prereqs for the next steps
       - run: sudo apt-get update && sudo apt-get install awscli -y && sudo apt-get clean
+      # Make sure to use a remote docker version in-support with CircleCI
+      # https://circleci.com/docs/building-docker-images/#docker-version
       - setup_remote_docker:
           version: 20.10.18
           docker_layer_caching: true
-      # This script uses AWS CLI v1 (installed above). We could use cimg/aws runner if we improved the ECR login in here.
+      # This script uses AWS CLI v1 (installed above). 
+      # We could use cimg/aws runner (AWS CLI v2) if we improved the ECR login in this script.
       - run: ./bin/circleci_buildciimg.sh
+      # Create the version here and make it available to remaining jobs via persist_to_workspace
       - run: echo $(cat base_version).$CIRCLE_BUILD_NUM > ./version
       - persist_to_workspace:
           root: ~/project
@@ -80,6 +84,7 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
+      # Load the shared workspace from previous jobs
       - attach_workspace:
           at: ~/project
       - run: ./setup.py --setup
@@ -93,8 +98,10 @@ jobs:
             make V=s -j$(nproc) -f ./Makefile
       - run: mkdir ./<< parameters.device >>
       - run: ./bin/circleci_archivebuild.sh << parameters.device >>
+      # Push artifacts to CircleCI
       - store_artifacts:
           path: ./<< parameters.device >>
+      # Save relevant files to the shared workspace
       - persist_to_workspace:
           root: ~/project
           paths:
@@ -114,6 +121,7 @@ jobs:
       - image: cimg/base:2023.02
     steps:
       - checkout
+      # Load the shared workspace so we can push stuff for it
       - attach_workspace:
           at: ~/project
       - run: ./bin/circleci_promotebuild.sh << parameters.device >>
@@ -124,7 +132,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/project
-        # should be no need to reset this repo from former steps since each job is a fresh filesystem
+        # Check out a fresh copy of unum-sdk (new job means it's completely clean) so we can tag
       - run: git clone git@github.com:violetatrium/unum-sdk --branch master
       - run: |
           BASE_VERSION=$(cat base_version)

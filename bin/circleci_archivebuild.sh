@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copied this build logic directly from the original Jenkins logic.
+# This script gathers all the build outputs and stuffs them into
+# the folder specified by DEVICE (first script parameter)
 set -o errexit
 set -o errtrace
 set -o pipefail

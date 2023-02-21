@@ -1,5 +1,11 @@
 #!/bin/bash
 # Copied/edited from RetroElk
+# This script generates a content hash for the entire repo and uses it to create an image
+# from Dockerfile (at the root of the repo) and pushes it to ECR. This image is used as
+# the build agent in subsequent build steps. The hash is used to determine
+# if the image should be rebuilt... if it is the same as in ECR, the build is skipped.
+# It's possible we could simplify the hash and _just_ get the hash for the Dockerfile, since
+# there are no dependenices in it on the rest of the repo.
 set -o errexit
 set -o errtrace
 set -o pipefail
@@ -22,6 +28,8 @@ function error_handler() {
 
 trap 'error_handler ${LINENO} $? "$(basename ${BASH_SOURCE[0]})" "${PIPESTATUS[*]}"' ERR
 
+# This is a catch-all for if podman is in-use instead of docker. Also means podman users
+# can run this script locally if they want to manually build and upload an image
 function podman_available() {
   if which podman &> /dev/null; then
     return 0;
@@ -31,11 +39,12 @@ function podman_available() {
 }
 
 function authenticate_ecr() {
+  # This only produces functional output with the AWS CLI v1
   local login_cmd=$(aws ecr get-login --region us-east-1 --no-include-email)
 
   # note: removed a conditional here that would replace "docker" in the output of the above 
   # line with "podman" because the script has alias'd podman. this _might_ not work right
-  # if you execute this locally and use podman.
+  # if you execute this locally and use podman, but it _should_.
 
   AWS_REPOSITORY_USER="$(echo $login_cmd | cut -d ' ' -f 4)"
   AWS_REPOSITORY_PASS="$(echo $login_cmd | cut -d ' ' -f 6)"
@@ -43,6 +52,7 @@ function authenticate_ecr() {
   eval $login_cmd &> /dev/null
 }
 
+# Generate the hash for versioning the image. It might be safe to simplify this to just the Dockerfile.
 function calculate_content_hash() {
   # The mediatek_sdk folder is actually a symlink to a directory, which
   # can't be hashed and thus is filtered out.
@@ -54,6 +64,7 @@ function calculate_content_hash() {
     | awk '{ print $1 }'
 }
 
+# Does a query against ECR to check if we've already pushed the image we want to build. 
 function tag_exists() {
   local tag="$1"
 
@@ -108,7 +119,7 @@ fi
 echo 'Unable to find existing tagged image, building a new one...'
 
 # The image doesn't exist anywhere, build it from scratch and push the appropriate tags
-
+# Change this line if we want to move/rename the dockerfile.
 docker build -t ${CONTENT_REVISION_NAME} -f Dockerfile . 
 
 echo 'Pushing image and content tag...'
