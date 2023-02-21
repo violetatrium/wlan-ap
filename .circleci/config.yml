@@ -110,6 +110,7 @@ jobs:
       - run: ./bin/circleci_archivebuild.sh << parameters.device >>
       # Copy out a couple openwrt files so we can save them somewhere that won't overlap
       - run: |
+          mkdir -p << parameters.device >>_config/openwrt/feeds/minim/unum
           cp openwrt/.config << parameters.device >>_config/openwrt/.config
           cp openwrt/feeds/minim/unum/Makefile << parameters.device >>_config/openwrt/feeds/minim/unum/Makefile
       # Push artifacts to CircleCI
