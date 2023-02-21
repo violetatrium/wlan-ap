@@ -9,9 +9,9 @@ DEVICE=$1
 DEFAULT_BRANCH=$2
 
 VERSION=$(cat ./version)
-eval $(grep CONFIG_VERSION_PRODUCT= openwrt/.config)
+eval $(grep CONFIG_VERSION_PRODUCT= ${DEVICE}_config/openwrt/.config)
 WLANAP_SHA=$(git rev-parse --verify HEAD)
-AGENT_SHA=$(grep PKG_SOURCE_VERSION openwrt/feeds/minim/unum/Makefile | cut -d '=' -f 2);
+AGENT_SHA=$(grep PKG_SOURCE_VERSION ${DEVICE}_config/openwrt/feeds/minim/unum/Makefile | cut -d '=' -f 2);
 HARDWARE_ID="${CONFIG_VERSION_PRODUCT}_firmware"
 FIRMWARE_VERSION="v$VERSION"
 UPGRADE_FILE=$DEVICE/$DEVICE-sysupgrade-$VERSION.bin

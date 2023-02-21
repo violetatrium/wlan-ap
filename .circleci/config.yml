@@ -108,6 +108,10 @@ jobs:
             make V=s -j$(nproc) -f ./Makefile
       - run: mkdir ./<< parameters.device >>
       - run: ./bin/circleci_archivebuild.sh << parameters.device >>
+      # Copy out a couple openwrt files so we can save them somewhere that won't overlap
+      - run: |
+          cp openwrt/.config << parameters.device >>_config/openwrt/.config
+          cp openwrt/feeds/minim/unum/Makefile << parameters.device >>_config/openwrt/feeds/minim/unum/Makefile
       # Push artifacts to CircleCI
       - store_artifacts:
           path: ./<< parameters.device >>
@@ -119,8 +123,8 @@ jobs:
       - persist_to_workspace:
           root: ~/project
           paths:
-            - openwrt/.config
-            - openwrt/feeds/minim/unum/Makefile
+            - << parameters.device >>_config/openwrt/.config
+            - << parameters.device >>_config/openwrt/feeds/minim/unum/Makefile
   promote:
     # use circle's dedicated IP ranges so we can whitelist them on our releases server.
     circleci_ip_ranges: true
