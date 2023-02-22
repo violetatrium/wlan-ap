@@ -15,6 +15,10 @@ workflows:
       # Set the version and make the build agent
       - prepare_cimg:
           context: deployable-service
+          filters:
+            branches:
+              only:
+                - << pipeline.parameters.build-branch >>
       # Build openWRT configurations
       - build:
           requires:
