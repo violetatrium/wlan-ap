@@ -22,8 +22,7 @@ workflows:
           # Adjust the matrix parameters to add/remove devices
           matrix:
             parameters:
-              #device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
-              device: ["motorola_q14", "motorola_r14"]
+              device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
           context: deployable-service
           # Add more branches to these filter blocks if you want to build more branches
           # They include the "master branch" from the parameter above by default
@@ -31,7 +30,6 @@ workflows:
             branches:
               only:
                 - << pipeline.parameters.build-branch >>
-                - SW-3301
       # Push builds to the releases feed
       - promote:
           name: promote-<< matrix.device >>
@@ -39,14 +37,12 @@ workflows:
             - build-<< matrix.device >>
           matrix:
             parameters:
-              #device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
-              device: ["motorola_q14", "motorola_r14"]
+              device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
           context: minimos
           filters:
             branches:
               only:
                 - << pipeline.parameters.build-branch >>
-                - SW-3301
       # Tag the wlan-ap and unum-sdk repos with the version
       - tag:
           name: tag
@@ -56,7 +52,6 @@ workflows:
             branches:
               only:
                 - << pipeline.parameters.build-branch >>
-                - SW-3301
 
 # Every job is a new filesystem
 # Every "run" step is a new shell
@@ -148,6 +143,7 @@ jobs:
       - attach_workspace:
           at: ~/project
         # Check out a fresh copy of unum-sdk (new job means it's completely clean) so we can tag
+        # Note: this step required adding a user key under the "Project Settings" in CircleCI.
       - run: git clone git@github.com:violetatrium/unum-sdk --branch master
       - run: |
           BASE_VERSION=$(cat base_version)
