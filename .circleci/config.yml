@@ -1,0 +1,168 @@
+---
+version: 2.1
+
+parameters:
+  # This is the branch that this pipeline will build. Set this to your
+  # "master" branch for your repository.
+  build-branch:
+    type: string
+    default: "v2.8.0-minim"
+
+workflows:
+  build:
+    # Uncomment the filters to only run builds for this on the main branch
+    jobs:
+      # Set the version and make the build agent
+      - prepare_cimg:
+          context: deployable-service
+          filters:
+            branches:
+              only:
+                - << pipeline.parameters.build-branch >>
+      # Build openWRT configurations
+      - build:
+          requires:
+            - prepare_cimg
+          # Adjust the matrix parameters to add/remove devices
+          matrix:
+            parameters:
+              device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
+          context: deployable-service
+          # Add more branches to these filter blocks if you want to build more branches
+          # They include the "master branch" from the parameter above by default
+          filters:
+            branches:
+              only:
+                - << pipeline.parameters.build-branch >>
+      # Push builds to the releases feed
+      - promote:
+          name: promote-<< matrix.device >>
+          requires:
+            - build-<< matrix.device >>
+          matrix:
+            parameters:
+              device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
+          context: minimos
+          filters:
+            branches:
+              only:
+                - << pipeline.parameters.build-branch >>
+      # Tag the wlan-ap and unum-sdk repos with the version
+      - tag:
+          name: tag
+          requires: 
+            - promote
+          filters:
+            branches:
+              only:
+                - << pipeline.parameters.build-branch >>
+
+# Every job is a new filesystem
+# Every "run" step is a new shell
+jobs:
+  prepare_cimg:
+    docker:
+      - image: cimg/base:2023.02
+    working_directory: ~/project
+    steps:
+      - checkout
+      # Build a docker image with all the openwrt prereqs for the next steps
+      - run: sudo apt-get update && sudo apt-get install awscli -y && sudo apt-get clean
+      # Make sure to use a remote docker version in-support with CircleCI
+      # https://circleci.com/docs/building-docker-images/#docker-version
+      - setup_remote_docker:
+          version: 20.10.18
+          docker_layer_caching: true
+      # This script uses AWS CLI v1 (installed above). 
+      # We could use cimg/aws runner (AWS CLI v2) if we improved the ECR login in this script.
+      - run: ./bin/circleci_buildciimg.sh
+      # Create the version here and make it available to remaining jobs via persist_to_workspace
+      - run: echo $(cat base_version).$CIRCLE_BUILD_NUM > ./version
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - version
+  # Since build takes so long, we might consider skipping a rebuild if the tag already exists?
+  build:
+    parameters:
+      device:
+        type: string
+    docker:
+      - image: 674914898519.dkr.ecr.us-east-1.amazonaws.com/violetatrium/wlan-ap:ci-rev-${CIRCLE_SHA1}
+    resource_class: xlarge
+    steps:
+      - checkout
+      # Load the shared workspace from previous jobs
+      - attach_workspace:
+          at: ~/project
+      - run: ./setup.py --setup
+      - run: 
+          name: "Build OpenWRT configuration"
+          no_output_timeout: 120m
+          command : | 
+            export AGENT_VERSION=$(cat version)
+            cd openwrt
+            ./scripts/gen_config.py << parameters.device >>
+            make download -j$(nproc) -f ./Makefile
+            make V=s -j$(nproc) -f ./Makefile
+      - run: mkdir ./<< parameters.device >>
+      - run: ./bin/circleci_archivebuild.sh << parameters.device >>
+      # Copy out a couple openwrt files so we can save them somewhere that won't overlap
+      - run: |
+          mkdir -p << parameters.device >>_config/openwrt/feeds/minim/unum
+          cp openwrt/.config << parameters.device >>_config/openwrt/.config
+          cp openwrt/feeds/minim/unum/Makefile << parameters.device >>_config/openwrt/feeds/minim/unum/Makefile
+      # Push artifacts to CircleCI
+      - store_artifacts:
+          path: ./<< parameters.device >>
+      # Save relevant files to the shared workspace
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - << parameters.device >>/*
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - << parameters.device >>_config/openwrt/.config
+            - << parameters.device >>_config/openwrt/feeds/minim/unum/Makefile
+  promote:
+    # use circle's dedicated IP ranges so we can whitelist them on our releases server.
+    circleci_ip_ranges: true
+    parameters:
+      device:
+        type: string
+    docker:
+      - image: cimg/base:2023.02
+    steps:
+      - checkout
+      # Load the shared workspace so we can push stuff for it
+      - attach_workspace:
+          at: ~/project
+      - run: ./bin/circleci_promotebuild.sh << parameters.device >> << pipeline.parameters.build-branch >>
+  tag:
+    docker:
+      - image: cimg/base:2023.02
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/project
+        # Check out a fresh copy of unum-sdk (new job means it's completely clean) so we can tag
+        # Note: this step required adding a user key under the "Project Settings" in CircleCI.
+      - run: git clone git@github.com:violetatrium/unum-sdk --branch master
+      - run: |
+          BASE_VERSION=$(cat base_version)
+          VERSION=$(cat version)
+
+          TAGS=`git tag --points-at HEAD`
+          if echo $TAGS | grep -Fqv "MINIM_OS_$BASE_VERSION" ; then
+              git tag "MINIM_OS_$VERSION"
+              git push origin MINIM_OS_$VERSION
+          fi
+
+          cd unum-sdk
+
+          TAGS=`git tag --points-at HEAD`
+          if echo \$TAGS | grep -Fqv "MINIM_OS_$BASE_VERSION" ; then
+              git tag "MINIM_OS_$VERSION"
+              git push origin MINIM_OS_$VERSION
+          fi
