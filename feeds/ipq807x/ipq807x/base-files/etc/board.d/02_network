@@ -13,6 +13,8 @@ qcom_setup_interfaces()
 
 	case $board in
 	hfcl,ion4xi|\
+	hfcl,ion4x|\
+	hfcl,ion4x_2|\
 	hfcl,ion4xe)
 		ucidef_set_interface_wan "eth0 eth1"
 		ucidef_set_interface_lan ""
@@ -31,10 +33,15 @@ qcom_setup_interfaces()
 	cig,wf194c|\
 	cig,wf194c4|\
 	edgecore,eap106|\
+	indio,um-310ax-v1|\
+	indio,um-510axp-v1|\
+	indio,um-510axm-v1|\
 	qcom,ipq5018-mp03.3|\
 	yuncore,ax840|\
 	motorola,q14|\
-	sercomm,wallaby)
+	sercomm,wallaby|\
+	plasmacloud,pax1800-v1|\
+	plasmacloud,pax1800-v2)
 		ucidef_set_interface_lan "eth0"
 		ucidef_set_interface_wan "eth1"
 		;;
@@ -44,19 +51,26 @@ qcom_setup_interfaces()
 		ucidef_set_interface_wan "eth0"
 		;;
 	edgecore,eap102|\
-	edgecore,eap104|\
+	liteon,wpx8324|\
 	wallys,dr6018|\
 	cig,wf188n|\
-	cig,wf196)
+	cig,wf196|\
+	muxi,ap3220l)
 		ucidef_set_interface_lan "eth1"
 		ucidef_set_interface_wan "eth0"
+		;;
+	yuncore,fap650)
+		ucidef_set_interface_lan "eth3 eth2 eth1 eth0"
+		ucidef_set_interface_wan "eth4"
 		;;
 	qcom,ipq807x-hk14)
 		ucidef_set_interface_lan "eth0 eth1 eth2 eth3"
 		ucidef_set_interface_wan "eth4"
 		;;
 	wallys,dr6018-v4|\
-	glinet,ax1800)
+	glinet,ax1800|\
+	meshpp,s618-cp03|\
+	meshpp,s618-cp01)
 		ucidef_set_interface_lan "eth1 eth2 eth3 eth4"
 		ucidef_set_interface_wan "eth0"
 		;;
@@ -68,6 +82,12 @@ qcom_setup_interfaces()
 		ucidef_add_switch_attr "switch1" "enable" "false"
 		ucidef_add_switch_attr "switch1" "reset" "true"
 		;;
+	edgecore,eap104)
+		ucidef_set_interface_lan "lan1 lan2 lan3 lan4"
+		ucidef_set_interface_wan "eth0"
+		ucidef_add_switch "switch1" \
+			"6@eth1" "1:lan1" "2:lan2" "3:lan3" "4:lan4"
+		;;
 	esac
 }
 
@@ -77,13 +97,24 @@ qcom_setup_macs()
 
 	case $board in
 	cig,wf194c|\
-	cig,wf194c4|\
-	cig,wf196)
+	cig,wf194c4)
 		mac=$(grep BaseMacAddress= /dev/mtd14 | cut -dx -f2)
 		wan_mac=$(macaddr_canonicalize $mac)
 		lan_mac=$(macaddr_add "$wan_mac" 1)
 		ucidef_set_network_device_mac eth0 $lan_mac
 		ucidef_set_network_device_mac eth1 $wan_mac
+		ip link set eth0 address $lan_mac
+		ip link set eth1 address $wan_mac
+		ucidef_set_label_macaddr $wan_mac
+		;;
+	cig,wf196)
+		mac=$(grep BaseMacAddress= /dev/mtd14 | cut -dx -f2)
+		wan_mac=$(macaddr_canonicalize $mac)
+		lan_mac=$(macaddr_add "$wan_mac" 1)
+		ucidef_set_network_device_mac eth1 $lan_mac
+		ucidef_set_network_device_mac eth0 $wan_mac
+		ip link set eth0 address $wan_mac
+		ip link set eth1 address $lan_mac
 		ucidef_set_label_macaddr $wan_mac
 		;;
 	cybertan,eww622-a1)
@@ -97,6 +128,21 @@ qcom_setup_macs()
 		;;
 	motorola,q14)
 		true
+		;;
+	indio,um-310ax-v1|\
+	indio,um-510axp-v1|\
+	indio,um-510axm-v1|\
+	yuncore,ax840)
+		wan_mac=$(cat /sys/class/net/eth1/address)
+		lan_mac=$(macaddr_add "$wan_mac" 1)
+		;;
+	muxi,ap3220l)
+		wan_mac=$(mtd_get_mac_binary 0:Product_Info 0x5b)
+		lan_mac=$(macaddr_add "$wan_mac" 1)
+		ucidef_set_network_device_mac eth0 $wan_mac
+		ucidef_set_network_device_mac eth1 $lan_mac
+		ip link set eth0 address $wan_mac
+		ip link set eth1 address $lan_mac
 		;;
 	*)
 		wan_mac=$(cat /sys/class/net/eth0/address)

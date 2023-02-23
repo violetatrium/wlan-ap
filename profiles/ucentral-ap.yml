@@ -30,7 +30,8 @@ packages:
   - kmod-sched-bpf
   - lldpd
   - maverick
-  - opennds
+  - uspot
+  - spotfilter
   - radius-gw-proxy
   - radsecproxy
   - ratelimit
@@ -44,11 +45,14 @@ packages:
   - ucentral-schema
   - ucentral-wifi
   - ucentral-tools
+  - usteer2
+  - ucrun
   - ucode
   - unetd
   - udhcpsnoop
   - udnssnoop
   - usteer
+  - usteer2
   - ustp
   - libustream-openssl
   - udevmand
