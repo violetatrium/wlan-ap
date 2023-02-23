@@ -1,0 +1,132 @@
+#!/bin/bash
+# Copied/edited from RetroElk
+# This script generates a content hash for the entire repo and uses it to create an image
+# from Dockerfile (at the root of the repo) and pushes it to ECR. This image is used as
+# the build agent in subsequent build steps. The hash is used to determine
+# if the image should be rebuilt... if it is the same as in ECR, the build is skipped.
+# It's possible we could simplify the hash and _just_ get the hash for the Dockerfile, since
+# there are no dependenices in it on the rest of the repo.
+set -o errexit
+set -o errtrace
+set -o pipefail
+set -o nounset
+
+AWS_REPOSITORY_BASE="674914898519.dkr.ecr.us-east-1.amazonaws.com"
+REPOSITORY_NAME="violetatrium/wlan-ap"
+
+GIT_REVISION="${CIRCLE_SHA1:-$(git rev-parse HEAD)}"
+
+# These are populated by the authenticate_ecr() method and are required for the
+# tag checks
+AWS_REPOSITORY_USER=""
+AWS_REPOSITORY_PASS=""
+
+function error_handler() {
+  echo "Error occurred in ${3} executing line ${1} with status code ${2}"
+  echo "The pipe status values were: ${4}"
+}
+
+trap 'error_handler ${LINENO} $? "$(basename ${BASH_SOURCE[0]})" "${PIPESTATUS[*]}"' ERR
+
+# This is a catch-all for if podman is in-use instead of docker. Also means podman users
+# can run this script locally if they want to manually build and upload an image
+function podman_available() {
+  if which podman &> /dev/null; then
+    return 0;
+  else
+    return 1;
+  fi
+}
+
+function authenticate_ecr() {
+  # This only produces functional output with the AWS CLI v1
+  local login_cmd=$(aws ecr get-login --region us-east-1 --no-include-email)
+
+  # note: removed a conditional here that would replace "docker" in the output of the above 
+  # line with "podman" because the script has alias'd podman. this _might_ not work right
+  # if you execute this locally and use podman, but it _should_.
+
+  AWS_REPOSITORY_USER="$(echo $login_cmd | cut -d ' ' -f 4)"
+  AWS_REPOSITORY_PASS="$(echo $login_cmd | cut -d ' ' -f 6)"
+
+  eval $login_cmd &> /dev/null
+}
+
+# Generate the hash for versioning the image. It might be safe to simplify this to just the Dockerfile.
+function calculate_content_hash() {
+  # The mediatek_sdk folder is actually a symlink to a directory, which
+  # can't be hashed and thus is filtered out.
+  git ls-files \
+    | grep -v mediatek_sdk \
+    | sort \
+    | xargs sha1sum \
+    | sha1sum \
+    | awk '{ print $1 }'
+}
+
+# Does a query against ECR to check if we've already pushed the image we want to build. 
+function tag_exists() {
+  local tag="$1"
+
+  curl -sS --head --fail -u "${AWS_REPOSITORY_USER}:${AWS_REPOSITORY_PASS}" https://${AWS_REPOSITORY_BASE}/v2/${REPOSITORY_NAME}/manifests/${tag} &> /dev/null
+}
+
+if podman_available; then
+  alias docker=podman
+fi
+
+echo 'Authenticating to ECR...'
+authenticate_ecr
+
+echo 'Check for production version...'
+if tag_exists prod-${GIT_REVISION}; then
+  echo "Current git revision '${GIT_REVISION}' exists as a fully tested image, tests aren't needed."
+  echo "true" > tested
+  exit 0
+fi
+
+GIT_REVISION_NAME="${AWS_REPOSITORY_BASE}/${REPOSITORY_NAME}:ci-rev-${GIT_REVISION}"
+
+echo 'Checking for git revision tag...'
+if tag_exists ci-rev-${GIT_REVISION}; then
+  echo "Current git revision '${GIT_REVISION}' exists as a temporary CI image"
+
+  docker pull ${GIT_REVISION_NAME}
+  DATA_CONTAINER=$(docker create ${GIT_REVISION_NAME})
+  docker cp ${DATA_CONTAINER}:/usr/src/app/tested ./tested || true
+  
+  exit 0
+fi
+
+echo 'Calculating content hash...'
+content_hash=$(calculate_content_hash)
+echo "Repository checkout currently has a content hash of: '${content_hash}'"
+
+CONTENT_REVISION_NAME="${AWS_REPOSITORY_BASE}/${REPOSITORY_NAME}:ci-sha-${content_hash}"
+
+echo 'Check for content hash tag...'
+if tag_exists ci-sha-${content_hash}; then
+  echo "Found a matching content hash in repository..."
+  echo "Retagging content hash with new git revision..."
+
+  docker pull ${CONTENT_REVISION_NAME}
+  docker tag ${CONTENT_REVISION_NAME} ${GIT_REVISION_NAME}
+  docker push ${GIT_REVISION_NAME}
+
+  exit 0
+fi
+
+echo 'Unable to find existing tagged image, building a new one...'
+
+# The image doesn't exist anywhere, build it from scratch and push the appropriate tags
+# Change this line if we want to move/rename the dockerfile.
+docker build -t ${CONTENT_REVISION_NAME} -f Dockerfile . 
+
+echo 'Pushing image and content tag...'
+docker push ${CONTENT_REVISION_NAME}
+
+echo 'Pushing git revision tag...'
+docker tag ${CONTENT_REVISION_NAME} ${GIT_REVISION_NAME}
+docker push ${GIT_REVISION_NAME}
+  
+echo 'New image pushed'
