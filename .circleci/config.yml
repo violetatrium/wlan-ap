@@ -6,7 +6,7 @@ parameters:
   # "master" branch for your repository.
   build-branch:
     type: string
-    default: "mh7020-v2.6.0-minim"
+    default: "v2.8.0-minim"
 
 workflows:
   build:
