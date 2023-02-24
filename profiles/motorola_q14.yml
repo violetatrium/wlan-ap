@@ -1,25 +1,17 @@
 ---
 profile: motorola_q14
-target: ipq807x
-subtarget: ipq50xx
+target: ipq50xx
+subtarget: generic
 description: Build image for the Motorola Q14
-image: bin/targets/ipq807x/ipq50xx/openwrt-ipq807x-motorola_q14-squashfs-sysupgrade.tar
+image: bin/targets/ipq50xx/generic/openwrt-ipq50xx-motorola_q14-squashfs-sysupgrade.tar
 feeds:
   - name: ipq807x
-    path: ../../feeds/ipq807x
+    path: ../../feeds/ipq807x_v5.4
 include:
-  - wifi-ax
-  - minim
+  - wifi-ax-v54
+  - ucentral-ap
 packages:
+  - ipq50xx
   - e2fsprogs
-  - kmod-block2mtd
-  - q14-uled-driver
 diffconfig: |
   CONFIG_KERNEL_IPQ_MEM_PROFILE=512
-  CONFIG_VERSION_PRODUCT="minim_q14_openwifi"
-  CONFIG_VERSION_HWREV=""
-  # CONFIG_PACKAGE_wpad is not set
-  CONFIG_PACKAGE_wpad-openssl=y
-  CONFIG_LIBCURL_OPENSSL=y
-  # CONFIG_LIBCURL_WOLFSSL is not set
-  # CONFIG_PACKAGE_libwolfssl is not set
