@@ -96,6 +96,16 @@ qcom_setup_macs()
 	local board="$1"
 
 	case $board in
+	motorola,q14)
+		mac=$(fw_printenv -n ethaddr)
+		lan_mac=$(macaddr_canonicalize $mac)
+		wan_mac=$(macaddr_add "$lan_mac" 1)
+		ucidef_set_network_device_mac eth0 $lan_mac
+		ucidef_set_network_device_mac eth1 $wan_mac
+		ip link set eth0 address $lan_mac
+		ip link set eth1 address $wan_mac
+		ucidef_set_label_macaddr $wan_mac
+		;;
 	cig,wf194c|\
 	cig,wf194c4)
 		mac=$(grep BaseMacAddress= /dev/mtd14 | cut -dx -f2)
