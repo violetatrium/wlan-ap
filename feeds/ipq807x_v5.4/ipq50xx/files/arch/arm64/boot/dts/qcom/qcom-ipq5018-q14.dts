@@ -831,7 +831,7 @@
 
 	q6_wcss_pd3: remoteproc_pd3 {
 		compatible = "qcom,ipq5018-wcss-pcie-mpd";
-		firmware = "IPQ5018/m3_fw.mdt";
+		firmware = "qcn6122/m3_fw.mdt";
 		interrupts-extended = <&wcss_smp2p_in 24 0>,
 					<&wcss_smp2p_in 25 0>,
 					<&wcss_smp2p_in 28 0>,
