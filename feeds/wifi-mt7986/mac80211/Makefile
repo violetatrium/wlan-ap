@@ -10,10 +10,10 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=mac80211
 
-PKG_VERSION:=5.15.8-1
-PKG_RELEASE:=2
-PKG_SOURCE_URL:=@KERNEL/linux/kernel/projects/backports/stable/v5.15.8/
-PKG_HASH:=9f71b659c034f19d156532ec780fcb606cee3c4ccc42e2f8ef18dd3e9f1b6820
+PKG_VERSION:=5.15.74-1
+PKG_RELEASE:=1
+PKG_SOURCE_URL:=@KERNEL/linux/kernel/projects/backports/stable/v5.15.74/
+PKG_HASH:=98098d0cab24cc76a04db738dc746a0c8d38d180398805481224f141cca06423
 
 PKG_SOURCE:=backports-$(PKG_VERSION).tar.xz
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/backports-$(PKG_VERSION)
@@ -56,7 +56,6 @@ config_package=$(if $(CONFIG_PACKAGE_kmod-$(1)),m)
 
 config-y:= \
 	WLAN \
-	CFG80211_WEXT \
 	CFG80211_CERTIFICATION_ONUS \
 	MAC80211_RC_MINSTREL \
 	MAC80211_RC_MINSTREL_HT \
@@ -177,6 +176,7 @@ define KernelPackage/hermes
   $(call KernelPackage/mac80211/Default)
   TITLE:=Hermes 802.11b chipset support
   DEPENDS:=@PCI_SUPPORT||PCMCIA_SUPPORT +kmod-cfg80211 +@DRIVER_WEXT_SUPPORT +kmod-crypto-michael-mic
+  DEFAULT:=n
   FILES:=$(PKG_BUILD_DIR)/drivers/net/wireless/intersil/orinoco/orinoco.ko
   AUTOLOAD:=$(call AutoProbe,orinoco)
 endef
@@ -226,6 +226,7 @@ define KernelPackage/lib80211
   $(call KernelPackage/mac80211/Default)
   TITLE:=802.11 Networking stack
   DEPENDS:=+kmod-cfg80211 +kmod-crypto-hash +kmod-crypto-ccm
+  HIDDEN:=1
   FILES:= \
 	$(PKG_BUILD_DIR)/net/wireless/lib80211.ko \
 	$(PKG_BUILD_DIR)/net/wireless/lib80211_crypt_wep.ko \
@@ -252,7 +253,7 @@ endef
 define KernelPackage/mac80211-hwsim
   $(call KernelPackage/mac80211/Default)
   TITLE:=mac80211 HW simulation device
-  DEPENDS+= +kmod-mac80211 +@DRIVER_11AC_SUPPORT +@DRIVER_11N_SUPPORT
+  DEPENDS+= +kmod-mac80211 +@DRIVER_11AX_SUPPORT +@DRIVER_11AC_SUPPORT +@DRIVER_11N_SUPPORT
   FILES:=$(PKG_BUILD_DIR)/drivers/net/wireless/mac80211_hwsim.ko
   AUTOLOAD:=$(call AutoProbe,mac80211_hwsim)
 endef
