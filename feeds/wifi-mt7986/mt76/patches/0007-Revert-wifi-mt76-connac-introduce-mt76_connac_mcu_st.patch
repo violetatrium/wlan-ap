@@ -1,0 +1,81 @@
+From 52522afb211d0a1d6c5b9f7302d13b4059c34edd Mon Sep 17 00:00:00 2001
+From: Brett Mastbergen <brettm@minim.com>
+Date: Thu, 2 Mar 2023 11:20:27 -0500
+Subject: [PATCH 7/7] Revert "wifi: mt76: connac: introduce
+ mt76_connac_mcu_sta_wed_update utility routine"
+
+This reverts commit a2e5e0667553d65421ac259ff131ccc579530685.
+---
+ mt76_connac_mcu.c | 22 ----------------------
+ mt76_connac_mcu.h |  1 -
+ 2 files changed, 23 deletions(-)
+
+diff --git a/mt76_connac_mcu.c b/mt76_connac_mcu.c
+index 673fca29..340e9f6b 100644
+--- a/mt76_connac_mcu.c
++++ b/mt76_connac_mcu.c
+@@ -1184,16 +1184,6 @@ void mt76_connac_mcu_sta_ba_tlv(struct sk_buff *skb,
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_mcu_sta_ba_tlv);
+ 
+-int mt76_connac_mcu_sta_wed_update(struct mt76_dev *dev, struct sk_buff *skb)
+-{
+-	if (!mtk_wed_device_active(&dev->mmio.wed))
+-		return 0;
+-
+-	return mtk_wed_device_update_msg(&dev->mmio.wed, WED_WO_STA_REC,
+-					 skb->data, skb->len);
+-}
+-EXPORT_SYMBOL_GPL(mt76_connac_mcu_sta_wed_update);
+-
+ int mt76_connac_mcu_sta_ba(struct mt76_dev *dev, struct mt76_vif *mvif,
+ 			   struct ieee80211_ampdu_params *params,
+ 			   int cmd, bool enable, bool tx)
+@@ -1219,10 +1209,6 @@ int mt76_connac_mcu_sta_ba(struct mt76_dev *dev, struct mt76_vif *mvif,
+ 	mt76_connac_mcu_wtbl_ba_tlv(dev, skb, params, enable, tx, sta_wtbl,
+ 				    wtbl_hdr);
+ 
+-	ret = mt76_connac_mcu_sta_wed_update(dev, skb);
+-	if (ret)
+-		return ret;
+-
+ 	ret = mt76_mcu_skb_send_msg(dev, skb, cmd, true);
+ 	if (ret)
+ 		return ret;
+@@ -1233,10 +1219,6 @@ int mt76_connac_mcu_sta_ba(struct mt76_dev *dev, struct mt76_vif *mvif,
+ 
+ 	mt76_connac_mcu_sta_ba_tlv(skb, params, enable, tx);
+ 
+-	ret = mt76_connac_mcu_sta_wed_update(dev, skb);
+-	if (ret)
+-		return ret;
+-
+ 	return mt76_mcu_skb_send_msg(dev, skb, cmd, true);
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_mcu_sta_ba);
+@@ -2677,10 +2659,6 @@ int mt76_connac_mcu_add_key(struct mt76_dev *dev, struct ieee80211_vif *vif,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = mt76_connac_mcu_sta_wed_update(dev, skb);
+-	if (ret)
+-		return ret;
+-
+ 	return mt76_mcu_skb_send_msg(dev, skb, mcu_cmd, true);
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_mcu_add_key);
+diff --git a/mt76_connac_mcu.h b/mt76_connac_mcu.h
+index 72d235a1..147f12d9 100644
+--- a/mt76_connac_mcu.h
++++ b/mt76_connac_mcu.h
+@@ -1880,7 +1880,6 @@ int mt76_connac_mcu_set_pm(struct mt76_dev *dev, int band, int enter);
+ int mt76_connac_mcu_restart(struct mt76_dev *dev);
+ int mt76_connac_mcu_rdd_cmd(struct mt76_dev *dev, int cmd, u8 index,
+ 			    u8 rx_sel, u8 val);
+-int mt76_connac_mcu_sta_wed_update(struct mt76_dev *dev, struct sk_buff *skb);
+ int mt76_connac2_load_ram(struct mt76_dev *dev, const char *fw_wm,
+ 			  const char *fw_wa);
+ int mt76_connac2_load_patch(struct mt76_dev *dev, const char *fw_name);
+-- 
+2.30.2
+
