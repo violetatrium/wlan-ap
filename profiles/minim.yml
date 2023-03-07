@@ -47,3 +47,7 @@ diffconfig: |
   # CONFIG_BATMAN_ADV_BATMAN_V is not set
   CONFIG_PACKAGE_libustream-openssl=y
   # CONFIG_PACKAGE_libustream-wolfssl is not set
+  CONFIG_PACKAGE_kmod-shortcut-fe=y
+  CONFIG_PACKAGE_kmod-shortcut-fe-cm=y
+  CONFIG_PACKAGE_kmod-shortcut-fe-drv=y
+  CONFIG_PACKAGE_kmod-fast-classifier=y
