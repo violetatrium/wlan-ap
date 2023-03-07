@@ -766,11 +766,11 @@ boot-args = <0x1 0x4 0x3 0x0F 0x0 0x0>,
 		qca,asid = <2>;
 		qca,auto-restart;
 		#ifdef __IPQ_MEM_PROFILE_256_MB__
-		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
+		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
 				<&q6_qcn6122_etr_1>;
 		#else
-		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
-				<&q6_qcn6122_etr_1>, <&q6_qcn6122_caldb_1>;
+		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
+				<&q6_qcn6122_etr_2>, <&q6_qcn6122_caldb_2>;
 		#endif
 	};
 
@@ -794,11 +794,11 @@ boot-args = <0x1 0x4 0x3 0x0F 0x0 0x0>,
 		qca,asid = <3>;
 		qca,auto-restart;
 		#ifdef __IPQ_MEM_PROFILE_256_MB__
-		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
-				<&q6_qcn6122_etr_2>;
+		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
+				<&q6_qcn6122_etr_1>;
 		#else
-		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
-				<&q6_qcn6122_etr_2>, <&q6_qcn6122_caldb_2>;
+		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
+				<&q6_qcn6122_etr_1>, <&q6_qcn6122_caldb_1>;
 		#endif
 	};
 };
@@ -858,7 +858,7 @@ boot-args = <0x1 0x4 0x3 0x0F 0x0 0x0>,
 	m3-dump-addr = <0x4E600000>;
 	nss-radio-priority = <1>;
 #endif
-	mem-region = <&q6_qcn6122_data1>;
+	mem-region = <&q6_qcn6122_data2>;
 	qcom,caldb-size = <0x500000>;
 	status = "ok";
 };
@@ -881,7 +881,7 @@ boot-args = <0x1 0x4 0x3 0x0F 0x0 0x0>,
 	m3-dump-addr = <0x4FD00000>;
 	nss-radio-priority = <1>;
 #endif
-	mem-region = <&q6_qcn6122_data2>;
+	mem-region = <&q6_qcn6122_data1>;
 	qcom,caldb-size = <0x500000>;
 	status = "ok";
 };
