@@ -41,64 +41,68 @@
 
 	chosen {
 		bootargs = "console=ttyMSM0,115200,n8 rw init=/init";
+	#ifdef __IPQ_MEM_PROFILE_256_MB__
+		bootargs-append = " swiotlb=1";
+	#else
 		bootargs-append = " swiotlb=1 coherent_pool=2M";
+	#endif
 		stdout-path = "serial0";
 	};
 
 	reserved-memory {
 	#ifdef __IPQ_MEM_PROFILE_256_MB__
-	/*		   256 MB Profile
+	/*                   256 MB Profile
 	 * +==========+==============+=========================+
-	 * |	  |	      |			 |
-	 * |  Region  | Start Offset |	  Size	   |
-	 * |	  |	      |			 |
+	 * |          |              |                         |
+	 * |  Region  | Start Offset |          Size           |
+	 * |          |              |                         |
 	 * +----------+--------------+-------------------------+
-	 * |    NSS   |  0x40000000  |	   8MB	   |
+	 * |    NSS   |  0x40000000  |           8MB           |
 	 * +----------+--------------+-------------------------+
 	 * |   Linux  |  0x40800000  | Depends on total memory |
 	 * +----------+--------------+-------------------------+
-	 * |   uboot  |  0x4A600000  |	   4MB	   |
+	 * |   uboot  |  0x4A600000  |           4MB           |
 	 * +----------+--------------+-------------------------+
-	 * |    SBL   |  0x4AA00000  |	   1MB	   |
+	 * |    SBL   |  0x4AA00000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * |   smem   |  0x4AB00000  |	   1MB	   |
+	 * |   smem   |  0x4AB00000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * |    TZ    |  0x4AC00000  |	   4MB	   |
+	 * |    TZ    |  0x4AC00000  |           4MB           |
 	 * +----------+--------------+-------------------------+
-	 * |    Q6    |	      |			 |
-	 * |   code/  |  0x4B000000  |	  20MB	   |
-	 * |   data   |	      |			 |
+	 * |    Q6    |              |                         |
+	 * |   code/  |  0x4B000000  |          20MB           |
+	 * |   data   |              |                         |
 	 * +----------+--------------+-------------------------+
-	 * |  IPQ5018 |	      |			 |
-	 * |   data   |  0x4C400000  |	  13MB	   |
+	 * |  IPQ5018 |              |                         |
+	 * |   data   |  0x4C400000  |          13MB           |
 	 * +----------+--------------+-------------------------+
-	 * |  IPQ5018 |	      |			 |
-	 * |  M3 Dump |  0x4D100000  |	   1MB	   |
+	 * |  IPQ5018 |              |                         |
+	 * |  M3 Dump |  0x4D100000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * |  IPQ5018 |	      |			 |
-	 * |   QDSS   |  0x4D200000  |	   1MB	   |
+	 * |  IPQ5018 |              |                         |
+	 * |   QDSS   |  0x4D200000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_1|	      |			 |
-	 * |   data   |  0x4D300000  |	  13MB	   |
+	 * | QCN6122_1|              |                         |
+	 * |   data   |  0x4D300000  |          13MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_1|	      |			 |
-	 * |  M3 Dump |  0x4E000000  |	   1MB	   |
+	 * | QCN6122_1|              |                         |
+	 * |  M3 Dump |  0x4E000000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_1|	      |			 |
-	 * |   QDSS   |  0x4E100000  |	   1MB	   |
+	 * | QCN6122_1|              |                         |
+	 * |   QDSS   |  0x4E100000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_2|	      |			 |
-	 * |   data   |  0x4E200000  |	  13MB	   |
+	 * | QCN6122_2|              |                         |
+	 * |   data   |  0x4E200000  |          13MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_2|	      |			 |
-	 * |  M3 Dump |  0x4EF00000  |	   1MB	   |
+	 * | QCN6122_2|              |                         |
+	 * |  M3 Dump |  0x4EF00000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_2|	      |			 |
-	 * |   QDSS   |  0x4F000000  |	   1MB	   |
+	 * | QCN6122_2|              |                         |
+	 * |   QDSS   |  0x4F000000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * |						   |
-	 * |	    Rest of the memory for Linux	   |
-	 * |						   |
+	 * |                                                   |
+	 * |            Rest of the memory for Linux           |
+	 * |                                                   |
 	 * +===================================================+
 	 */
 		q6_mem_regions: q6_mem_regions@4B000000 {
@@ -156,67 +160,67 @@
 			reg = <0x0 0x4F000000 0x0 0x100000>;
 		};
 	#else
-	/*		 512MB/1GB Profiles
+	/*                 512MB/1GB Profiles
 	 * +==========+==============+=========================+
-	 * |	  |	      |			 |
-	 * |  Region  | Start Offset |	  Size	   |
-	 * |	  |	      |			 |
+	 * |          |              |                         |
+	 * |  Region  | Start Offset |          Size           |
+	 * |          |              |                         |
 	 * +----------+--------------+-------------------------+
-	 * |    NSS   |  0x40000000  |	  16MB	   |
+	 * |    NSS   |  0x40000000  |          16MB           |
 	 * +----------+--------------+-------------------------+
 	 * |   Linux  |  0x41000000  | Depends on total memory |
 	 * +----------+--------------+-------------------------+
-	 * |   uboot  |  0x4A600000  |	   4MB	   |
+	 * |   uboot  |  0x4A600000  |           4MB           |
 	 * +----------+--------------+-------------------------+
-	 * |    SBL   |  0x4AA00000  |	   1MB	   |
+	 * |    SBL   |  0x4AA00000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * |   smem   |  0x4AB00000  |	   1MB	   |
+	 * |   smem   |  0x4AB00000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * |    TZ    |  0x4AC00000  |	   4MB	   |
+	 * |    TZ    |  0x4AC00000  |           4MB           |
 	 * +----------+--------------+-------------------------+
-	 * |    Q6    |	      |			 |
-	 * |   code/  |  0x4B000000  |	  20MB	   |
-	 * |   data   |	      |			 |
+	 * |    Q6    |              |                         |
+	 * |   code/  |  0x4B000000  |          20MB           |
+	 * |   data   |              |                         |
 	 * +----------+--------------+-------------------------+
-	 * |  IPQ5018 |	      |			 |
-	 * |   data   |  0x4C400000  |	  13MB	   |
+	 * |  IPQ5018 |              |                         |
+	 * |   data   |  0x4C400000  |          13MB           |
 	 * +----------+--------------+-------------------------+
-	 * |  IPQ5018 |	      |			 |
-	 * |  M3 Dump |  0x4D100000  |	   1MB	   |
+	 * |  IPQ5018 |              |                         |
+	 * |  M3 Dump |  0x4D100000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * |  IPQ5018 |	      |			 |
-	 * |   QDSS   |  0x4D200000  |	   1MB	   |
+	 * |  IPQ5018 |              |                         |
+	 * |   QDSS   |  0x4D200000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * |  IPQ5018 |	      |			 |
-	 * |  Caldb   |  0x4D300000  |	   2MB	   |
+	 * |  IPQ5018 |              |                         |
+	 * |  Caldb   |  0x4D300000  |           2MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_1|	      |			 |
-	 * |   data   |  0x4D500000  |	  13MB	   |
+	 * | QCN6122_1|              |                         |
+	 * |   data   |  0x4D500000  |          13MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_1|	      |			 |
-	 * |  M3 Dump |  0x4E200000  |	   1MB	   |
+	 * | QCN6122_1|              |                         |
+	 * |  M3 Dump |  0x4E200000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_1|	      |			 |
-	 * |   QDSS   |  0x4E300000  |	   1MB	   |
+	 * | QCN6122_1|              |                         |
+	 * |   QDSS   |  0x4E300000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_1|	      |			 |
-	 * |  Caldb   |  0x4E400000  |	   5MB	   |
+	 * | QCN6122_1|              |                         |
+	 * |  Caldb   |  0x4E400000  |           5MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_2|	      |			 |
-	 * |   data   |  0x4E900000  |	  13MB	   |
+	 * | QCN6122_2|              |                         |
+	 * |   data   |  0x4E900000  |          13MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_2|	      |			 |
-	 * |  M3 Dump |  0x4F600000  |	   1MB	   |
+	 * | QCN6122_2|              |                         |
+	 * |  M3 Dump |  0x4F600000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_2|	      |			 |
-	 * |   QDSS   |  0x4F700000  |	   1MB	   |
+	 * | QCN6122_2|              |                         |
+	 * |   QDSS   |  0x4F700000  |           1MB           |
 	 * +----------+--------------+-------------------------+
-	 * | QCN6122_2|	      |			 |
-	 * |  Caldb   |  0x4F800000  |	   5MB	   |
+	 * | QCN6122_2|              |                         |
+	 * |  Caldb   |  0x4F800000  |           5MB           |
 	 * +----------+--------------+-------------------------+
-	 * |						   |
-	 * |	    Rest of the memory for Linux	   |
-	 * |						   |
+	 * |                                                   |
+	 * |            Rest of the memory for Linux           |
+	 * |                                                   |
 	 * +===================================================+
 	 */
 		q6_mem_regions: q6_mem_regions@4B000000 {
@@ -439,10 +443,6 @@
 &sdhc_1 {
 	pinctrl-0 = <&emmc_pins>;
 	pinctrl-names = "default";
-	qcom,clk-rates = <400000 25000000 50000000 100000000 \
-			 192000000 384000000>;
-	qcom,bus-speed-mode = "HS200_1p8v", "DDR_1p8v";
-	qcom,nonremovable;
 	status = "ok";
 };
 
@@ -820,18 +820,18 @@
 					"stop",
 					"spawn";
 	#ifdef __IPQ_MEM_PROFILE_256_MB__
-		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
-				<&q6_qcn6122_etr_1>;
+		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
+				<&q6_qcn6122_etr_2>;
 	#else
-		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
-				<&q6_qcn6122_etr_1>, <&q6_qcn6122_caldb_1>;
+		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
+				<&q6_qcn6122_etr_2>, <&q6_qcn6122_caldb_2>;
 	#endif
 
 	};
 
 	q6_wcss_pd3: remoteproc_pd3 {
 		compatible = "qcom,ipq5018-wcss-pcie-mpd";
-		firmware = "qcn6122/m3_fw.mdt";
+		firmware = "IPQ5018/q6_fw.mdt";
 		interrupts-extended = <&wcss_smp2p_in 24 0>,
 					<&wcss_smp2p_in 25 0>,
 					<&wcss_smp2p_in 28 0>,
@@ -848,11 +848,11 @@
 					"stop",
 					"spawn";
 	#ifdef	__IPQ_MEM_PROFILE_256_MB__
-		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
-				<&q6_qcn6122_etr_2>;
+		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
+				<&q6_qcn6122_etr_1>;
 	#else
-		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
-				<&q6_qcn6122_etr_2>, <&q6_qcn6122_caldb_2>;
+		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
+				<&q6_qcn6122_etr_1>, <&q6_qcn6122_caldb_1>;
 	#endif
 	};
 };
@@ -875,7 +875,7 @@
 	qcom,board_id = <0x24>;
 #ifdef __CNSS2__
 	qcom,bdf-addr = <0x4C400000 0x4C400000 0x4C400000 0x0 0x0>;
-	qcom,caldb-addr = <0x4D400000 0x4D400000 0 0 0>;
+	qcom,caldb-addr = <0x4D300000 0x4D300000 0 0 0>;
 	qcom,caldb-size = <0x200000>;
 	mem-region = <&q6_ipq5018_data>;
 #else
@@ -896,12 +896,12 @@
 #endif
 	qcom,board_id = <0x60>;
 #ifdef __CNSS2__
-	qcom,bdf-addr = <0x4D600000 0x4D600000 0x4D300000 0x0 0x0>;
-	qcom,caldb-addr = <0x4E800000 0x4E800000 0 0 0>;
+	qcom,bdf-addr = <0x4D500000 0x4D500000 0x4D300000 0x0 0x0>;
+	qcom,caldb-addr = <0x4E400000 0x4E400000 0 0 0>;
 	qcom,caldb-size = <0x500000>;
-	mem-region = <&q6_qcn6122_data1>;
+	mem-region = <&q6_qcn6122_data2>;
 #else
-	memory-region = <&q6_qcn6122_data1>;
+	memory-region = <&q6_qcn6122_data2>;
 #endif
 	status = "ok";
 };
@@ -918,12 +918,12 @@
 #endif
 	qcom,board_id = <0xb0>;
 #ifdef __CNSS2__
-	qcom,bdf-addr = <0x4ED00000 0x4ED00000 0x4E400000 0x0 0x0>;
-	qcom,caldb-addr = <0x4FF00000 0x4FF00000 0 0 0>;
+	qcom,bdf-addr = <0x4E900000 0x4E900000 0x4E200000 0x0 0x0>;
+	qcom,caldb-addr = <0x4F800000 0x4F800000 0 0 0>;
 	qcom,caldb-size = <0x500000>;
-	mem-region = <&q6_qcn6122_data2>;
+	mem-region = <&q6_qcn6122_data1>;
 #else
-	memory-region = <&q6_qcn6122_data2>;
+	memory-region = <&q6_qcn6122_data1>;
 #endif
 	status = "ok";
 };
