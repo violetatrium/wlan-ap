@@ -12,6 +12,7 @@ packages:
   - minim-openwifi-scripts
   - minim-firewall-custom
   - minim-ipv6-custom
+  - minim-performance-tuning
   - kmod-ipt-nat6
   - kmod-ipt-raw6
   - kmod-ipt-ipopt
