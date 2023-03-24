@@ -1,0 +1,44 @@
+From d752e5257927689713733646e6f15168361e8d09 Mon Sep 17 00:00:00 2001
+From: Brett Mastbergen <brettm@minim.com>
+Date: Fri, 24 Mar 2023 10:47:47 -0400
+Subject: [PATCH] wpa_supplicant: Allow 160mhz mesh on channel 100 (freq 5500)
+
+---
+ ...llow-160mhz-mesh-on-channel-100-freq.patch | 25 +++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+ create mode 100644 package/network/services/hostapd/patches/999-wpa_supplicant-Allow-160mhz-mesh-on-channel-100-freq.patch
+
+diff --git a/package/network/services/hostapd/patches/999-wpa_supplicant-Allow-160mhz-mesh-on-channel-100-freq.patch b/package/network/services/hostapd/patches/999-wpa_supplicant-Allow-160mhz-mesh-on-channel-100-freq.patch
+new file mode 100644
+index 0000000000..f354c92058
+--- /dev/null
++++ b/package/network/services/hostapd/patches/999-wpa_supplicant-Allow-160mhz-mesh-on-channel-100-freq.patch
+@@ -0,0 +1,25 @@
++From 64a97732ccfb092ee13e09210d0739ac62c0a7d1 Mon Sep 17 00:00:00 2001
++From: Brett Mastbergen <brettm@minim.com>
++Date: Fri, 24 Mar 2023 10:45:13 -0400
++Subject: [PATCH] wpa_supplicant: Allow 160mhz mesh on channel 100 (freq 5500)
++
++---
++ wpa_supplicant/wpa_supplicant.c | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++diff --git a/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant/wpa_supplicant.c
++index d37a994f9..68fbcc27e 100644
++--- a/wpa_supplicant/wpa_supplicant.c
+++++ b/wpa_supplicant/wpa_supplicant.c
++@@ -2732,7 +2732,7 @@ skip_to_6ghz:
++ 			chwidth = CHANWIDTH_160MHZ;
++ 			vht_caps |= VHT_CAP_SUPP_CHAN_WIDTH_160MHZ;
++ 			seg0 = 50;
++-		} else if (freq->freq == 5520) {
+++		} else if (freq->freq == 5520 || freq->freq == 5500) {
++ 			chwidth = CHANWIDTH_160MHZ;
++ 			vht_caps |= VHT_CAP_SUPP_CHAN_WIDTH_160MHZ;
++ 			seg0 = 114;
++-- 
++2.30.2
++
+-- 
+2.30.2
+
