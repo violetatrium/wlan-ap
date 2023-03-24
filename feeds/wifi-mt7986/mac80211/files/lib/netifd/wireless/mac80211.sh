@@ -838,6 +838,8 @@ mac80211_setup_supplicant() {
 		iw dev "$ifname" del
 		return 1
 	}
+	set_default wds 0
+
 	if [ "$mode" = "sta" ]; then
 		wpa_supplicant_add_network "$ifname"
 	else
@@ -855,7 +857,7 @@ mac80211_setup_supplicant() {
 	NEW_MD5_SP=$(test -e "${_config}" && md5sum ${_config})
 	OLD_MD5_SP=$(uci -q -P /var/state get wireless._${phy}.md5_${ifname})
 	if [ "$add_sp" = "1" ]; then
-		if [ "$wds" -gt 0 ]; then
+		if [ "$wds" -gt 0 -o "$mode" = "mesh" ]; then
 			wpa_supplicant_run "$ifname" "$hostapd_ctrl"
 		else
 			wpa_supplicant_run "$ifname"
