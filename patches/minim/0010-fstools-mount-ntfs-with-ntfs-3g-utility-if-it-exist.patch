@@ -1,0 +1,56 @@
+From 091af0ada22a3b7fdfa085179d3405a8bba5f196 Mon Sep 17 00:00:00 2001
+From: Venkata Chimata <venkatch@gmail.com>
+Date: Fri, 31 Mar 2023 20:53:48 +0530
+Subject: [PATCH] fstools: mount ntfs with ntfs-3g utility if it exist
+
+---
+ ...tfs-with-ntfs-3g-utility-if-it-exist.patch | 37 +++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+ create mode 100644 package/system/fstools/patches/0001-fstools-mount-ntfs-with-ntfs-3g-utility-if-it-exist.patch
+
+diff --git a/package/system/fstools/patches/0001-fstools-mount-ntfs-with-ntfs-3g-utility-if-it-exist.patch b/package/system/fstools/patches/0001-fstools-mount-ntfs-with-ntfs-3g-utility-if-it-exist.patch
+new file mode 100644
+index 0000000000..a5ce799938
+--- /dev/null
++++ b/package/system/fstools/patches/0001-fstools-mount-ntfs-with-ntfs-3g-utility-if-it-exist.patch
+@@ -0,0 +1,37 @@
++From 9ded7091688d6bcbb0976a3babbad6fe7442c966 Mon Sep 17 00:00:00 2001
++From: Venkata Chimata <venkatch@gmail.com>
++Date: Fri, 31 Mar 2023 20:48:58 +0530
++Subject: [PATCH] fstools: mount ntfs with ntfs-3g utility if it exist
++
++---
++ block.c | 14 ++++++++++++--
++ 1 file changed, 12 insertions(+), 2 deletions(-)
++
++diff --git a/block.c b/block.c
++index d839838..9cda17b 100644
++--- a/block.c
+++++ b/block.c
++@@ -890,8 +890,18 @@ static int handle_mount(const char *source, const char *target,
++ 	size_t mount_opts_len;
++ 	char *mount_opts = NULL, *ptr;
++ 
++-	err = mount(source, target, fstype, m ? m->flags : 0,
++-	            (m && m->options) ? m->options : "");
+++	if (!strcmp(fstype, "ntfs") &&
+++		!access("/sbin/mount.ntfs-3g", X_OK)) {
+++		char cmd[256];
+++		char buf[256];
+++		snprintf(cmd, sizeof(cmd), "/sbin/mount.ntfs-3g %s %s -o rw,big_writes", source, target);
+++		FILE *fp = popen(cmd, "r");
+++		while (fgets(buf, sizeof(buf), fp) != NULL);
+++		err = pclose(fp);
+++	} else {
+++		err = mount(source, target, fstype, m ? m->flags : 0,
+++		            (m && m->options) ? m->options : "");
+++	}
++ 
++ 	/* Requested file system type is not available in kernel,
++ 	   attempt to call mount helper. */
++-- 
++2.25.1
++
+-- 
+2.25.1
+
