@@ -52,3 +52,4 @@ diffconfig: |
   CONFIG_PACKAGE_kmod-shortcut-fe-cm=y
   CONFIG_PACKAGE_kmod-shortcut-fe-drv=y
   CONFIG_PACKAGE_kmod-fast-classifier=y
+  # CONFIG_TARGET_PREINIT_DISABLE_FAILSAFE is not set
