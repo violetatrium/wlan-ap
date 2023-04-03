@@ -48,3 +48,4 @@ diffconfig: |
   CONFIG_PACKAGE_libustream-openssl=y
   # CONFIG_PACKAGE_libustream-wolfssl is not set
   # CONFIG_TARGET_PREINIT_DISABLE_FAILSAFE is not set
+  CONFIG_PKG_FORTIFY_SOURCE_2=y
