@@ -23,3 +23,7 @@ diffconfig: |
   CONFIG_LIBCURL_OPENSSL=y
   # CONFIG_LIBCURL_WOLFSSL is not set
   # CONFIG_PACKAGE_libwolfssl is not set
+  CONFIG_PACKAGE_kmod-shortcut-fe=y
+  CONFIG_PACKAGE_kmod-shortcut-fe-cm=y
+  CONFIG_PACKAGE_kmod-shortcut-fe-drv=y
+  CONFIG_PACKAGE_kmod-fast-classifier=y
