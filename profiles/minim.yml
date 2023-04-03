@@ -26,7 +26,6 @@ packages:
   - kmod-nfnetlink
   - minim-web-admin
   - openssl-util
-  - usteer
   - curl
   - dnsmasq-full
   - kmod-batman-adv
