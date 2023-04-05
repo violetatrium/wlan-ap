@@ -1,0 +1,49 @@
+From 245643cd62d3fd215851218e9d6184101002e28c Mon Sep 17 00:00:00 2001
+From: Venkata Chimata <venkatch@gmail.com>
+Date: Wed, 5 Apr 2023 19:11:51 +0530
+Subject: [PATCH] Use mount command to mount hfsplus for rw access
+
+---
+ ...mmand-to-mount-hfsplus-for-rw-access.patch | 30 +++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+ create mode 100644 package/system/fstools/patches/0002-Use-mount-command-to-mount-hfsplus-for-rw-access.patch
+
+diff --git a/package/system/fstools/patches/0002-Use-mount-command-to-mount-hfsplus-for-rw-access.patch b/package/system/fstools/patches/0002-Use-mount-command-to-mount-hfsplus-for-rw-access.patch
+new file mode 100644
+index 0000000000..10769ccbd1
+--- /dev/null
++++ b/package/system/fstools/patches/0002-Use-mount-command-to-mount-hfsplus-for-rw-access.patch
+@@ -0,0 +1,30 @@
++From a32917202a84a70464dac9e881ebbad0fbc51129 Mon Sep 17 00:00:00 2001
++From: Venkata Chimata <venkatch@gmail.com>
++Date: Wed, 5 Apr 2023 10:22:18 +0530
++Subject: [PATCH] Use mount command to mount hfsplus for rw access
++
++---
++ block.c | 7 +++++++
++ 1 file changed, 7 insertions(+)
++
++diff --git a/block.c b/block.c
++index 9cda17b..96083af 100644
++--- a/block.c
+++++ b/block.c
++@@ -898,6 +898,13 @@ static int handle_mount(const char *source, const char *target,
++ 		FILE *fp = popen(cmd, "r");
++ 		while (fgets(buf, sizeof(buf), fp) != NULL);
++ 		err = pclose(fp);
+++	} else if (!strcmp(fstype, "hfsplus")) {
+++		char cmd[256];
+++		char buf[256];
+++		snprintf(cmd, sizeof(cmd), "mount -t hfsplus -o rw,force %s %s", source, target);
+++		FILE *fp = popen(cmd, "r");
+++		while (fgets(buf, sizeof(buf), fp) != NULL);
+++		err = pclose(fp);
++ 	} else {
++ 		err = mount(source, target, fstype, m ? m->flags : 0,
++ 		            (m && m->options) ? m->options : "");
++-- 
++2.25.1
++
+-- 
+2.25.1
+
