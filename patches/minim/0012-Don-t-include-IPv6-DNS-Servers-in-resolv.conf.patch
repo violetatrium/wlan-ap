@@ -1,0 +1,49 @@
+From 18c6f3b0bb9d11b3160e164ddb125cb4edec1b38 Mon Sep 17 00:00:00 2001
+From: Venkata Chimata <venkatch@gmail.com>
+Date: Fri, 7 Apr 2023 17:08:47 +0530
+Subject: [PATCH] Don't include IPv6 DNS Servers in resolv.conf
+
+---
+ ...lude-IPv6-DNS-Servers-in-resolv.conf.patch | 30 +++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+ create mode 100644 package/network/config/netifd/patches/201-Don-t-include-IPv6-DNS-Servers-in-resolv.conf.patch
+
+diff --git a/package/network/config/netifd/patches/201-Don-t-include-IPv6-DNS-Servers-in-resolv.conf.patch b/package/network/config/netifd/patches/201-Don-t-include-IPv6-DNS-Servers-in-resolv.conf.patch
+new file mode 100644
+index 0000000000..96e01b9ba0
+--- /dev/null
++++ b/package/network/config/netifd/patches/201-Don-t-include-IPv6-DNS-Servers-in-resolv.conf.patch
+@@ -0,0 +1,30 @@
++From aa23f3a3c76d9b677b40090878a3aa8dc1f46f10 Mon Sep 17 00:00:00 2001
++From: Venkata Chimata <venkatch@gmail.com>
++Date: Fri, 7 Apr 2023 17:06:20 +0530
++Subject: [PATCH] Don't include IPv6 DNS Servers in resolv.conf
++
++---
++ interface-ip.c | 6 +++---
++ 1 file changed, 3 insertions(+), 3 deletions(-)
++
++diff --git a/interface-ip.c b/interface-ip.c
++index 585cb6f..abeb7ee 100644
++--- a/interface-ip.c
+++++ b/interface-ip.c
++@@ -1487,10 +1487,10 @@ write_resolv_conf_entries(FILE *f, struct interface_ip_settings *ip, const char
++ 		if (!str)
++ 			continue;
++ 
++-		if (s->af == AF_INET6 && IN6_IS_ADDR_LINKLOCAL(&s->addr.in6))
++-			fprintf(f, "nameserver %s%%%s\n", str, dev);
++-		else
+++		if (s->af == AF_INET6 && IN6_IS_ADDR_LINKLOCAL(&s->addr.in6)) {
+++		} else {
++ 			fprintf(f, "nameserver %s\n", str);
+++		}
++ 	}
++ 
++ 	vlist_simple_for_each_element(&ip->dns_search, d, node) {
++-- 
++2.25.1
++
+-- 
+2.25.1
+
