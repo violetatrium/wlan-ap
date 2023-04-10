@@ -22,7 +22,7 @@
 +}
 +
  static bool mtk_spi_mem_supports_op(struct spi_mem *mem,
- 				     const struct spi_mem_op *op)
+ 										const struct spi_mem_op *op)
  {
 @@ -946,6 +963,7 @@ err_exit:
  }
