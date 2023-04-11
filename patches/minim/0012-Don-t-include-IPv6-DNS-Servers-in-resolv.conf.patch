@@ -34,7 +34,7 @@ index 0000000000..96e01b9ba0
 +-		if (s->af == AF_INET6 && IN6_IS_ADDR_LINKLOCAL(&s->addr.in6))
 +-			fprintf(f, "nameserver %s%%%s\n", str, dev);
 +-		else
-++		if (s->af == AF_INET6 && IN6_IS_ADDR_LINKLOCAL(&s->addr.in6)) {
+++		if (s->af == AF_INET6) {
 ++		} else {
 + 			fprintf(f, "nameserver %s\n", str);
 ++		}
