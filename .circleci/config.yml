@@ -26,7 +26,7 @@ workflows:
           # Adjust the matrix parameters to add/remove devices
           matrix:
             parameters:
-              device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
+              device: ["motorola_q14", "motorola_r14"]
           context: deployable-service
           # Add more branches to these filter blocks if you want to build more branches
           # They include the "master branch" from the parameter above by default
@@ -41,7 +41,7 @@ workflows:
             - build-<< matrix.device >>
           matrix:
             parameters:
-              device: ["motorola_q14", "motorola_mh7020", "motorola_r14"]
+              device: ["motorola_q14", "motorola_r14"]
           context: minimos
           filters:
             branches:
