@@ -16,6 +16,15 @@
 		reg = <0 0x40000000 0 0x10000000>;
 	};
 
+	reserved-memory {
+		/* 64 KiB reserved for ramoops/pstore */
+		ramoops@0x42ff0000 {
+			compatible = "ramoops";
+			reg = <0 0x42ff0000 0 0x10000>;
+			record-size = <0x1000>;
+		};
+	};
+
 	gpio-keys {
 		compatible = "gpio-keys";
 
