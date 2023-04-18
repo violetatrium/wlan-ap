@@ -36,6 +36,7 @@ packages:
   - ppp
   - libustream-openssl
   - coreutils
+  - crash-collector
 diffconfig: |
   CONFIG_IMAGEOPT=y
   CONFIG_VERSIONOPT=y
