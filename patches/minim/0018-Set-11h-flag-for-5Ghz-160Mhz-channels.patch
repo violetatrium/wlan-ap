@@ -1,0 +1,50 @@
+From 935711d7a0f85961d6e5f280b9fe897c9621ef66 Mon Sep 17 00:00:00 2001
+From: Venkata Chimata <venkatch@gmail.com>
+Date: Wed, 3 May 2023 20:37:17 +0530
+Subject: [PATCH] Set 11h flag for 5Ghz +  160Mhz channels
+
+---
+ ...9991-Set-11h-flag-for-5Ghz-160Mhz-channels | 31 +++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+ create mode 100644 package/network/services/hostapd/patches/9991-Set-11h-flag-for-5Ghz-160Mhz-channels
+
+diff --git a/package/network/services/hostapd/patches/9991-Set-11h-flag-for-5Ghz-160Mhz-channels b/package/network/services/hostapd/patches/9991-Set-11h-flag-for-5Ghz-160Mhz-channels
+new file mode 100644
+index 0000000000..fa0706cd7d
+--- /dev/null
++++ b/package/network/services/hostapd/patches/9991-Set-11h-flag-for-5Ghz-160Mhz-channels
+@@ -0,0 +1,31 @@
++From 1b639f951f2d61d512eccb81d65e775bde1ab88d Mon Sep 17 00:00:00 2001
++From: Venkata Chimata <venkatch@gmail.com>
++Date: Wed, 3 May 2023 20:09:33 +0530
++Subject: [PATCH] Set 11h flag for 5Ghz +  160Mhz channels
++
++---
++ wpa_supplicant/mesh.c | 8 ++++++--
++ 1 file changed, 6 insertions(+), 2 deletions(-)
++
++diff --git a/wpa_supplicant/mesh.c b/wpa_supplicant/mesh.c
++index f1fe238..431848a 100644
++--- a/wpa_supplicant/mesh.c
+++++ b/wpa_supplicant/mesh.c
++@@ -475,8 +475,12 @@ static int wpa_supplicant_mesh_init(struct wpa_supplicant *wpa_s,
++ 	bss->conf->ap_max_inactivity = wpa_s->conf->mesh_max_inactivity;
++ 	bss->conf->mesh_fwding = wpa_s->conf->mesh_fwding;
++ 
++-	if (ieee80211_is_dfs(ssid->frequency, wpa_s->hw.modes,
++-			     wpa_s->hw.num_modes) && wpa_s->conf->country[0]) {
+++	// Limiting this check to this place only for now
+++	// Changing in ieee80211_is_dfs needs an extra parameter ie channel width
+++	// We don't the repurcussions if we pass extra parameter and change ieee80211_is_dfs
+++	if ((ssid->frequency >= 5180 && ssid->frequency <= 5885 && ssid->max_oper_chwidth == CHANWIDTH_160MHZ) ||
+++		ieee80211_is_dfs(ssid->frequency, wpa_s->hw.modes,  wpa_s->hw.num_modes) && wpa_s->conf->country[0]) {
+++		wpa_printf(MSG_INFO, "Setting 11h to 1\n");
++ 		conf->ieee80211h = 1;
++ 		conf->ieee80211d = 1;
++ 		conf->country[0] = wpa_s->conf->country[0];
++-- 
++2.25.1
++
+-- 
+2.25.1
+
