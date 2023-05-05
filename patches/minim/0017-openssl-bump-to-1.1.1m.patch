@@ -1,0 +1,59 @@
+From 5beaa75d94c4a981c580905b84c7ef33caf0c3e2 Mon Sep 17 00:00:00 2001
+From: Eneas U de Queiroz <cotequeiroz@gmail.com>
+Date: Mon, 3 Jan 2022 10:52:58 -0300
+Subject: [PATCH] openssl: bump to 1.1.1m
+
+This is a bugfix release.  Changelog:
+
+  *) Avoid loading of a dynamic engine twice.
+  *) Fixed building on Debian with kfreebsd kernels
+  *) Prioritise DANE TLSA issuer certs over peer certs
+  *) Fixed random API for MacOS prior to 10.12
+
+Patches were refreshed.
+
+Signed-off-by: Eneas U de Queiroz <cotequeiroz@gmail.com>
+(cherry picked from commit def9565be632b316c82ffc5a7b28c789e9df75b4)
+---
+ package/libs/openssl/Makefile                                 | 4 ++--
+ .../libs/openssl/patches/100-Configure-afalg-support.patch    | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/package/libs/openssl/Makefile b/package/libs/openssl/Makefile
+index 0397ab90c4..e8e10524ca 100644
+--- a/package/libs/openssl/Makefile
++++ b/package/libs/openssl/Makefile
+@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=openssl
+ PKG_BASE:=1.1.1
+-PKG_BUGFIX:=l
++PKG_BUGFIX:=m
+ PKG_VERSION:=$(PKG_BASE)$(PKG_BUGFIX)
+ PKG_RELEASE:=1
+ PKG_USE_MIPS16:=0
+@@ -26,7 +26,7 @@ PKG_SOURCE_URL:= \
+ 	ftp://ftp.pca.dfn.de/pub/tools/net/openssl/source/ \
+ 	ftp://ftp.pca.dfn.de/pub/tools/net/openssl/source/old/$(PKG_BASE)/
+ 
+-PKG_HASH:=0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153aa16fa76bd1
++PKG_HASH:=f89199be8b23ca45fc7cb9f1d8d3ee67312318286ad030f5316aca6462db6c96
+ 
+ PKG_LICENSE:=OpenSSL
+ PKG_LICENSE_FILES:=LICENSE
+diff --git a/package/libs/openssl/patches/100-Configure-afalg-support.patch b/package/libs/openssl/patches/100-Configure-afalg-support.patch
+index 98944103b5..d8789f4b45 100644
+--- a/package/libs/openssl/patches/100-Configure-afalg-support.patch
++++ b/package/libs/openssl/patches/100-Configure-afalg-support.patch
+@@ -12,7 +12,7 @@ diff --git a/Configure b/Configure
+ index 5a699836f3..74d057c219 100755
+ --- a/Configure
+ +++ b/Configure
+-@@ -1545,7 +1545,9 @@ unless ($disabled{"crypto-mdebug-backtrace"})
++@@ -1548,7 +1548,9 @@ unless ($disabled{"crypto-mdebug-backtrace"})
+  
+  unless ($disabled{afalgeng}) {
+      $config{afalgeng}="";
+-- 
+2.30.2
+
