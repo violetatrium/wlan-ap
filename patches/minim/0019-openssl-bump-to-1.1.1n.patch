@@ -1,0 +1,45 @@
+From b1c353986895ef757dd69ea9fe30dd22194ee421 Mon Sep 17 00:00:00 2001
+From: Martin Schiller <ms@dev.tdt.de>
+Date: Wed, 16 Mar 2022 15:04:56 +0100
+Subject: [PATCH] openssl: bump to 1.1.1n
+
+This is a bugfix release. Changelog:
+
+  *) Fixed a bug in the BN_mod_sqrt() function that can cause it to loop
+     forever for non-prime moduli. (CVE-2022-0778)
+
+  *) Add ciphersuites based on DHE_PSK (RFC 4279) and ECDHE_PSK
+     (RFC 5489) to the list of ciphersuites providing Perfect Forward
+     Secrecy as required by SECLEVEL >= 3.
+
+Signed-off-by: Martin Schiller <ms@dev.tdt.de>
+(cherry picked from commit e17c6ee62770005e398364ee5d955c9a8ab6f016)
+---
+ package/libs/openssl/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/package/libs/openssl/Makefile b/package/libs/openssl/Makefile
+index e8e10524ca..52a5aeec93 100644
+--- a/package/libs/openssl/Makefile
++++ b/package/libs/openssl/Makefile
+@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=openssl
+ PKG_BASE:=1.1.1
+-PKG_BUGFIX:=m
++PKG_BUGFIX:=n
+ PKG_VERSION:=$(PKG_BASE)$(PKG_BUGFIX)
+ PKG_RELEASE:=1
+ PKG_USE_MIPS16:=0
+@@ -26,7 +26,7 @@ PKG_SOURCE_URL:= \
+ 	ftp://ftp.pca.dfn.de/pub/tools/net/openssl/source/ \
+ 	ftp://ftp.pca.dfn.de/pub/tools/net/openssl/source/old/$(PKG_BASE)/
+ 
+-PKG_HASH:=f89199be8b23ca45fc7cb9f1d8d3ee67312318286ad030f5316aca6462db6c96
++PKG_HASH:=40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a
+ 
+ PKG_LICENSE:=OpenSSL
+ PKG_LICENSE_FILES:=LICENSE
+-- 
+2.30.2
+
