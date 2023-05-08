@@ -1,0 +1,40 @@
+From 25fdb42249aef7b5eb53675f82f0091c532bf90c Mon Sep 17 00:00:00 2001
+From: Paul Spooren <mail@aparcar.org>
+Date: Tue, 18 May 2021 15:36:10 +0200
+Subject: [PATCH 46/61] busybox: use $(AUTORELEASE) and SPDX
+
+use AUTORELEASE since BusyBox is often updaten and PKG_RELEASE is not
+consistently bumped. Also use SPDX license headers to be machine
+readable and bump the copyright year to 2021.
+
+Signed-off-by: Paul Spooren <mail@aparcar.org>
+---
+ package/utils/busybox/Makefile | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/package/utils/busybox/Makefile b/package/utils/busybox/Makefile
+index 76a910361e..242a2428ac 100644
+--- a/package/utils/busybox/Makefile
++++ b/package/utils/busybox/Makefile
+@@ -1,15 +1,12 @@
++# SPDX-License-Identifier: GPL-2.0-or-later
+ #
+-# Copyright (C) 2006-2020 OpenWrt.org
+-#
+-# This is free software, licensed under the GNU General Public License v2.
+-# See /LICENSE for more information.
+-#
++# Copyright (C) 2006-2021 OpenWrt.org
+ 
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=busybox
+ PKG_VERSION:=1.33.1
+-PKG_RELEASE:=1
++PKG_RELEASE:=$(AUTORELEASE)
+ PKG_FLAGS:=essential
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+-- 
+2.30.2
+

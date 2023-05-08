@@ -1,0 +1,36 @@
+From bffee5ea192386ffeac81e7b40e9d58a93b85db8 Mon Sep 17 00:00:00 2001
+From: Sergey Ponomarev <stokito@gmail.com>
+Date: Sun, 20 Jun 2021 23:38:37 +0300
+Subject: [PATCH 52/61] busybox: disable bzip2
+
+bzip2 adds about 8kb of size. For tiny builds it's often disabled.
+It's not directly used by stock OpenWrt programs.
+Kernel images compressed with bzip2 are also not fully supported.
+
+Signed-off-by: Sergey Ponomarev <stokito@gmail.com>
+[fix \ indention]
+Signed-off-by: Paul Spooren <mail@aparcar.org>
+---
+ package/utils/busybox/Config-defaults.in | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/package/utils/busybox/Config-defaults.in b/package/utils/busybox/Config-defaults.in
+index f9028620a1..d078a39954 100644
+--- a/package/utils/busybox/Config-defaults.in
++++ b/package/utils/busybox/Config-defaults.in
+@@ -351,10 +351,10 @@ config BUSYBOX_DEFAULT_FEATURE_GUNZIP_LONG_OPTIONS
+ 	default n
+ config BUSYBOX_DEFAULT_BUNZIP2
+ 	bool
+-	default y
++	default n
+ config BUSYBOX_DEFAULT_BZCAT
+ 	bool
+-	default y
++	default n
+ config BUSYBOX_DEFAULT_UNLZMA
+ 	bool
+ 	default n
+-- 
+2.30.2
+

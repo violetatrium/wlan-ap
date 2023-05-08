@@ -1,0 +1,33 @@
+From a9ebd3a0ea968c7f28f9c0763089b67610ce1c1b Mon Sep 17 00:00:00 2001
+From: Chen Minqiang <ptpt52@gmail.com>
+Date: Thu, 20 May 2021 16:34:28 +0800
+Subject: [PATCH 50/61] busybox: nslookup applet link with resolv if use glibc
+
+This fixed b36b8b6929c6d6b17edddfb4597cf6a26a991ed0
+("busybox: remove nslookup_lede/openwrt.patch")
+
+It is likely dropped by mistake, This add back the changes
+
+Signed-off-by: Chen Minqiang <ptpt52@gmail.com>
+---
+ package/utils/busybox/Makefile | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/package/utils/busybox/Makefile b/package/utils/busybox/Makefile
+index 1e7d9dd333..32f0d2c755 100644
+--- a/package/utils/busybox/Makefile
++++ b/package/utils/busybox/Makefile
+@@ -98,6 +98,10 @@ endif
+ 
+ LDLIBS += $(call BUSYBOX_IF_ENABLED,PAM,pam pam_misc pthread)
+ 
++ifeq ($(CONFIG_USE_GLIBC),y)
++  LDLIBS += $(call BUSYBOX_IF_ENABLED,NSLOOKUP,resolv)
++endif
++
+ ifeq ($(BUILD_VARIANT),selinux)
+   LDLIBS += selinux sepol
+ endif
+-- 
+2.30.2
+

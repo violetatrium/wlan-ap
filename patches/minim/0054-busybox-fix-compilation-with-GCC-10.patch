@@ -1,0 +1,37 @@
+From 8ae3d5f9ca17756ff73db6117784f426a8c6226b Mon Sep 17 00:00:00 2001
+From: Stijn Tintel <stijn@linux-ipv6.be>
+Date: Thu, 13 May 2021 16:23:26 +0300
+Subject: [PATCH 54/61] busybox: fix compilation with GCC 10
+
+When compiling busybox with GCC 10 and CONFIG_PKG_ASLR_PIE_ALL=y, there
+are hundreds of errors like:
+
+relocation R_MIPS16_26 against `xzalloc' cannot be used when making a
+shared object; recompile with -fPIC
+
+Simply solve this by no longer disabling PKG_ASLR_PIE, so that $(FPIC)
+is properly added to the CFLAGS and LDFLAGS.
+
+Signed-off-by: Stijn Tintel <stijn@linux-ipv6.be>
+Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ package/utils/busybox/Makefile | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/package/utils/busybox/Makefile b/package/utils/busybox/Makefile
+index 32f0d2c755..76a1de33b7 100644
+--- a/package/utils/busybox/Makefile
++++ b/package/utils/busybox/Makefile
+@@ -18,9 +18,6 @@ PKG_BUILD_DEPENDS:=BUSYBOX_CONFIG_PAM:libpam
+ PKG_BUILD_PARALLEL:=1
+ PKG_CHECK_FORMAT_SECURITY:=0
+ 
+-#Busybox use it's own PIE config flag and LDFLAGS are used with ld, not gcc.
+-PKG_ASLR_PIE:=0
+-
+ PKG_LICENSE:=GPL-2.0
+ PKG_LICENSE_FILES:=LICENSE archival/libarchive/bz/LICENSE
+ PKG_CPE_ID:=cpe:/a:busybox:busybox
+-- 
+2.30.2
+

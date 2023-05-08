@@ -1,0 +1,36 @@
+From 157d501402e1116effcb750da83faeb4c7fd684a Mon Sep 17 00:00:00 2001
+From: Tom Keddie <github@bronwenandtom.com>
+Date: Mon, 8 May 2023 08:47:11 -0700
+Subject: [PATCH 31/37] Revert "busybox: use $(AUTORELEASE) and SPDX"
+
+This reverts commit 6b6bcca1a05315c019eb55bec2b460a54c65ba1e.
+---
+ package/utils/busybox/Makefile | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/package/utils/busybox/Makefile b/package/utils/busybox/Makefile
+index 0d5e420943..475a154fa3 100644
+--- a/package/utils/busybox/Makefile
++++ b/package/utils/busybox/Makefile
+@@ -1,12 +1,15 @@
+-# SPDX-License-Identifier: GPL-2.0-or-later
+ #
+-# Copyright (C) 2006-2021 OpenWrt.org
++# Copyright (C) 2006-2020 OpenWrt.org
++#
++# This is free software, licensed under the GNU General Public License v2.
++# See /LICENSE for more information.
++#
+ 
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=busybox
+ PKG_VERSION:=1.33.1
+-PKG_RELEASE:=$(AUTORELEASE)
++PKG_RELEASE:=1
+ PKG_FLAGS:=essential
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+-- 
+2.30.2
+

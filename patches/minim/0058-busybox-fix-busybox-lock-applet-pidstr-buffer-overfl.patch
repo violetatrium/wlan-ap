@@ -1,0 +1,45 @@
+From 9d2b26d5a70583c0cc0bcb94d7e0fb6ac498069a Mon Sep 17 00:00:00 2001
+From: Qichao Zhang <njuzhangqichao@gmail.com>
+Date: Sun, 20 Mar 2022 09:43:22 +0800
+Subject: [PATCH 58/61] busybox: fix busybox lock applet pidstr buffer overflow
+
+Kernel setting `/proc/sys/kernel/pid_max` can be set up to 4194304 (7
+digits) which will cause buffer overflow in busbox lock patch, this
+often happens when running in a rootfs container environment.
+This commit enlarges `pidstr` to 12 bytes to ensure a sufficient buffer
+for pid number and an additional char '\n'.
+
+Signed-off-by: Qichao Zhang <njuzhangqichao@gmail.com>
+(cherry picked from commit 34567750db2c3a84fc9f971189c223e2eefd93b0)
+---
+ package/utils/busybox/patches/220-add_lock_util.patch | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/package/utils/busybox/patches/220-add_lock_util.patch b/package/utils/busybox/patches/220-add_lock_util.patch
+index 4e46b74f0e..623121b9fb 100644
+--- a/package/utils/busybox/patches/220-add_lock_util.patch
++++ b/package/utils/busybox/patches/220-add_lock_util.patch
+@@ -72,9 +72,9 @@
+ +
+ +static int do_lock(void)
+ +{
+-+	int pid;
+++	pid_t pid;
+ +	int flags;
+-+	char pidstr[8];
+++	char pidstr[12];
+ +
+ +	if ((fd = open(file, O_RDWR | O_CREAT | O_EXCL, 0700)) < 0) {
+ +		if ((fd = open(file, O_RDWR)) < 0) {
+@@ -109,7 +109,7 @@
+ +		if (!waitonly) {
+ +			lseek(fd, 0, SEEK_SET);
+ +			ftruncate(fd, 0);
+-+			sprintf(pidstr, "%d\n", pid);
+++			snprintf(sizeof(pidstr), pidstr, "%d\n", pid);
+ +			write(fd, pidstr, strlen(pidstr));
+ +			close(fd);
+ +		}
+-- 
+2.30.2
+

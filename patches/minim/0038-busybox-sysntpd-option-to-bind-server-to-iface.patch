@@ -1,0 +1,50 @@
+From e12fcf0fe5597467f7cc21144e5f4da60500ebd2 Mon Sep 17 00:00:00 2001
+From: Alexey Dobrovolsky <dobrovolskiy.alexey@gmail.com>
+Date: Tue, 23 Feb 2021 17:43:02 +0300
+Subject: [PATCH 38/61] busybox: sysntpd: option to bind server to iface
+
+NTPD in busybox has option -I to bind server to IFACE.
+However, capabilities of the busybox are limited, the -I option cannot be
+repeated and only one interface can be effectively specified in it.
+This option is currently not configurable via UCI.
+The patch adds an interface option to the system config, ntp section.
+Also sort options for uci_load_validate alphabetically.
+
+Signed-off-by: Alexey Dobrovolsky <dobrovolskiy.alexey@gmail.com>
+---
+ package/utils/busybox/files/sysntpd | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/package/utils/busybox/files/sysntpd b/package/utils/busybox/files/sysntpd
+index e4a070762f..c4c311c242 100755
+--- a/package/utils/busybox/files/sysntpd
++++ b/package/utils/busybox/files/sysntpd
+@@ -30,7 +30,12 @@ get_dhcp_ntp_servers() {
+ 
+ validate_ntp_section() {
+ 	uci_load_validate system timeserver "$1" "$2" \
+-		'server:list(host)' 'enabled:bool:1' 'enable_server:bool:0' 'use_dhcp:bool:1' 'dhcp_interface:list(string)'
++		'dhcp_interface:list(string)' \
++		'enable_server:bool:0' \
++		'enabled:bool:1' \
++		'interface:string' \
++		'server:list(host)' \
++		'use_dhcp:bool:1'
+ }
+ 
+ start_ntpd_instance() {
+@@ -49,7 +54,10 @@ start_ntpd_instance() {
+ 
+ 	procd_open_instance
+ 	procd_set_param command "$PROG" -n -N
+-	[ "$enable_server" = "1" ] && procd_append_param command -l
++	if [ "$enable_server" = "1" ]; then
++		procd_append_param command -l
++		[ -n "$interface" ] && procd_append_param command -I $interface
++	fi
+ 	[ -x "$HOTPLUG_SCRIPT" ] && procd_append_param command -S "$HOTPLUG_SCRIPT"
+ 	for peer in $server; do
+ 		procd_append_param command -p $peer
+-- 
+2.30.2
+
