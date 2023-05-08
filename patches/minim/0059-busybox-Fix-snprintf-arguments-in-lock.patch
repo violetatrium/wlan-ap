@@ -1,0 +1,32 @@
+From d18e365b17d1c247cffcc1686d66c88b74d3446c Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Thu, 31 Mar 2022 18:43:09 +0200
+Subject: [PATCH 59/61] busybox: Fix snprintf arguments in lock
+
+The first argument for snprintf is the buffer and the 2. one is the
+size. Fix the order. This broke the lock application.
+
+Fixes: 9d2b26d5a705 ("busybox: fix busybox lock applet pidstr buffer overflow")
+Reported-by: Hartmut Birr <e9hack@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+(cherry picked from commit d80336e1a970b088c235dcf2773052537e6f5d72)
+---
+ package/utils/busybox/patches/220-add_lock_util.patch | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/package/utils/busybox/patches/220-add_lock_util.patch b/package/utils/busybox/patches/220-add_lock_util.patch
+index 623121b9fb..579b705f34 100644
+--- a/package/utils/busybox/patches/220-add_lock_util.patch
++++ b/package/utils/busybox/patches/220-add_lock_util.patch
+@@ -109,7 +109,7 @@
+ +		if (!waitonly) {
+ +			lseek(fd, 0, SEEK_SET);
+ +			ftruncate(fd, 0);
+-+			snprintf(sizeof(pidstr), pidstr, "%d\n", pid);
+++			snprintf(pidstr, sizeof(pidstr), "%d\n", pid);
+ +			write(fd, pidstr, strlen(pidstr));
+ +			close(fd);
+ +		}
+-- 
+2.30.2
+

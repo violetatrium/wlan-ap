@@ -1,0 +1,80 @@
+From 3a359398f04f3f4c4a42d1ca274bb1a0f0303e05 Mon Sep 17 00:00:00 2001
+From: Perry Melange <isprotejesvalkata@gmail.com>
+Date: Tue, 30 Jul 2019 11:05:22 +0200
+Subject: [PATCH 42/61] busybox: add SRV support to nslookup_lede.c patch
+
+Add support for querying and parsing SRV DNS records to nslookup_lede.c
+
+This patch is based on http://lists.busybox.net/pipermail/busybox/2019-June/087359.html
+
+Signed-off-by: Perry Melange <isprotejesvalkata@gmail.com>
+[reword subject, bump PKG_RELEASE]
+Signed-off-by: Paul Spooren <mail@aparcar.org>
+---
+ package/utils/busybox/Makefile                |  2 +-
+ .../patches/230-add_nslookup_lede.patch       | 22 ++++++++++++++++++-
+ 2 files changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/package/utils/busybox/Makefile b/package/utils/busybox/Makefile
+index 58bc1e6795..b69e718a35 100644
+--- a/package/utils/busybox/Makefile
++++ b/package/utils/busybox/Makefile
+@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=busybox
+ PKG_VERSION:=1.33.0
+-PKG_RELEASE:=3
++PKG_RELEASE:=4
+ PKG_FLAGS:=essential
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+diff --git a/package/utils/busybox/patches/230-add_nslookup_lede.patch b/package/utils/busybox/patches/230-add_nslookup_lede.patch
+index 446b01c3f1..280d4e238e 100644
+--- a/package/utils/busybox/patches/230-add_nslookup_lede.patch
++++ b/package/utils/busybox/patches/230-add_nslookup_lede.patch
+@@ -34,7 +34,7 @@ Signed-off-by: Jo-Philipp Wich <jo@mein.io>
+  # However, on *other platforms* it fails when some of those flags
+ --- /dev/null
+ +++ b/networking/nslookup_lede.c
+-@@ -0,0 +1,914 @@
++@@ -0,0 +1,934 @@
+ +/*
+ + * nslookup_lede - musl compatible replacement for busybox nslookup
+ + *
+@@ -128,6 +128,7 @@ Signed-off-by: Jo-Philipp Wich <jo@mein.io>
+ +	{ ns_t_cname, "CNAME" },
+ +	{ ns_t_mx,    "MX"    },
+ +	{ ns_t_txt,   "TXT"   },
+++	{ ns_t_srv,   "SRV"   },
+ +	{ ns_t_ptr,   "PTR"   },
+ +	{ ns_t_any,   "ANY"   },
+ +	{ }
+@@ -259,6 +260,25 @@ Signed-off-by: Jo-Philipp Wich <jo@mein.io>
+ +			}
+ +			break;
+ +
+++		case ns_t_srv:
+++			if (rdlen < 6) {
+++				//printf("SRV record too short\n");
+++				return -1;
+++			}
+++
+++			cp = ns_rr_rdata(rr);
+++			n = ns_name_uncompress(ns_msg_base(handle), ns_msg_end(handle),
+++			                       cp + 6, dname, sizeof(dname));
+++
+++			if (n < 0) {
+++				//printf("Unable to uncompress domain: %s\n", strerror(errno));
+++				return -1;
+++			}
+++
+++			printf("%s\tservice = %hu %hu %hu %s\n", ns_rr_name(rr),
+++				ns_get16(cp), ns_get16(cp + 2), ns_get16(cp + 4), dname);
+++			break;
+++
+ +		case ns_t_soa:
+ +			if (rdlen < 20) {
+ +				//fprintf(stderr, "SOA record too short\n");
+-- 
+2.30.2
+

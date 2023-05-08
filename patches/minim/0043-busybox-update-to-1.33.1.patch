@@ -1,0 +1,206 @@
+From 6713fe030fca32fc3d5ad9761f3b2f96501aedd6 Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Sat, 8 May 2021 09:38:58 +0200
+Subject: [PATCH 43/61] busybox: update to 1.33.1
+
+Remove backports:
+- 001-backport1330fix-ash-make-strdup-copy.patch
+- 002-backport1330fix-traceroute.patch
+- 005-backport-CVE-2021-28831.patch
+
+Remove upstreamed:
+- 010-fix-wrong-variable.patch
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+[don't use $(AUTORELEASE) for now]
+Signed-off-by: Paul Spooren <mail@aparcar.org>
+---
+ package/utils/busybox/Makefile                |  6 +--
+ ...backport1330fix-ash-make-strdup-copy.patch | 40 --------------
+ .../002-backport1330fix-traceroute.patch      | 26 ----------
+ .../patches/005-backport-CVE-2021-28831.patch | 52 -------------------
+ .../patches/010-fix-wrong-variable.patch      | 11 ----
+ 5 files changed, 3 insertions(+), 132 deletions(-)
+ delete mode 100644 package/utils/busybox/patches/001-backport1330fix-ash-make-strdup-copy.patch
+ delete mode 100644 package/utils/busybox/patches/002-backport1330fix-traceroute.patch
+ delete mode 100644 package/utils/busybox/patches/005-backport-CVE-2021-28831.patch
+ delete mode 100644 package/utils/busybox/patches/010-fix-wrong-variable.patch
+
+diff --git a/package/utils/busybox/Makefile b/package/utils/busybox/Makefile
+index b69e718a35..475a154fa3 100644
+--- a/package/utils/busybox/Makefile
++++ b/package/utils/busybox/Makefile
+@@ -8,14 +8,14 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=busybox
+-PKG_VERSION:=1.33.0
+-PKG_RELEASE:=4
++PKG_VERSION:=1.33.1
++PKG_RELEASE:=1
+ PKG_FLAGS:=essential
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+ PKG_SOURCE_URL:=https://www.busybox.net/downloads \
+ 		http://sources.buildroot.net
+-PKG_HASH:=d568681c91a85edc6710770cebc1e80e042ad74d305b5c2e6d57a5f3de3b8fbd
++PKG_HASH:=12cec6bd2b16d8a9446dd16130f2b92982f1819f6e1c5f5887b6db03f5660d28
+ 
+ PKG_BUILD_DEPENDS:=BUSYBOX_CONFIG_PAM:libpam
+ PKG_BUILD_PARALLEL:=1
+diff --git a/package/utils/busybox/patches/001-backport1330fix-ash-make-strdup-copy.patch b/package/utils/busybox/patches/001-backport1330fix-ash-make-strdup-copy.patch
+deleted file mode 100644
+index b495227d9f..0000000000
+--- a/package/utils/busybox/patches/001-backport1330fix-ash-make-strdup-copy.patch
++++ /dev/null
+@@ -1,40 +0,0 @@
+-From 67cc582d4289c5de521d11b08307c8ab26ee1e28 Mon Sep 17 00:00:00 2001
+-From: Denys Vlasenko <vda.linux@googlemail.com>
+-Date: Sun, 3 Jan 2021 10:55:39 +0100
+-Subject: ash: make a strdup copy of $HISTFILE for line editing
+-
+-Otherwise if $HISTFILE is unset or reassigned, bad things can happen.
+-
+-function                                             old     new   delta
+-ash_main                                            1210    1218      +8
+-
+-Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
+----
+- shell/ash.c | 4 ++--
+- 1 file changed, 2 insertions(+), 2 deletions(-)
+-
+-diff --git a/shell/ash.c b/shell/ash.c
+-index f16d7fb6a..ecbfbf091 100644
+---- a/shell/ash.c
+-+++ b/shell/ash.c
+-@@ -14499,7 +14499,7 @@ int ash_main(int argc UNUSED_PARAM, char **argv)
+- 
+- 	if (sflag || minusc == NULL) {
+- #if MAX_HISTORY > 0 && ENABLE_FEATURE_EDITING_SAVEHISTORY
+--		if (iflag) {
+-+		if (line_input_state) {
+- 			const char *hp = lookupvar("HISTFILE");
+- 			if (!hp) {
+- 				hp = lookupvar("HOME");
+-@@ -14513,7 +14513,7 @@ int ash_main(int argc UNUSED_PARAM, char **argv)
+- 				}
+- 			}
+- 			if (hp)
+--				line_input_state->hist_file = hp;
+-+				line_input_state->hist_file = xstrdup(hp);
+- # if ENABLE_FEATURE_SH_HISTFILESIZE
+- 			hp = lookupvar("HISTFILESIZE");
+- 			line_input_state->max_history = size_from_HISTFILESIZE(hp);
+--- 
+-cgit v1.2.1
+-
+diff --git a/package/utils/busybox/patches/002-backport1330fix-traceroute.patch b/package/utils/busybox/patches/002-backport1330fix-traceroute.patch
+deleted file mode 100644
+index eb03094eee..0000000000
+--- a/package/utils/busybox/patches/002-backport1330fix-traceroute.patch
++++ /dev/null
+@@ -1,26 +0,0 @@
+-From 89358a7131d3e75c74af834bb117b4fad7914983 Mon Sep 17 00:00:00 2001
+-From: Denys Vlasenko <vda.linux@googlemail.com>
+-Date: Tue, 2 Feb 2021 13:48:21 +0100
+-Subject: traceroute: fix option parsing
+-
+-Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
+----
+- networking/traceroute.c | 2 +-
+- 1 file changed, 1 insertion(+), 1 deletion(-)
+-
+-diff --git a/networking/traceroute.c b/networking/traceroute.c
+-index 3f1a9ab46..29f5e480b 100644
+---- a/networking/traceroute.c
+-+++ b/networking/traceroute.c
+-@@ -896,7 +896,7 @@ traceroute_init(int op, char **argv)
+- 
+- 	op |= getopt32(argv, "^"
+- 		OPT_STRING
+--		"\0" "-1:x-x" /* minimum 1 arg */
+-+		"\0" "-1" /* minimum 1 arg */
+- 		, &tos_str, &device, &max_ttl_str, &port_str, &nprobes_str
+- 		, &source, &waittime_str, &pausemsecs_str, &first_ttl_str
+- 	);
+--- 
+-cgit v1.2.1
+-
+diff --git a/package/utils/busybox/patches/005-backport-CVE-2021-28831.patch b/package/utils/busybox/patches/005-backport-CVE-2021-28831.patch
+deleted file mode 100644
+index 7637679a69..0000000000
+--- a/package/utils/busybox/patches/005-backport-CVE-2021-28831.patch
++++ /dev/null
+@@ -1,52 +0,0 @@
+-From f25d254dfd4243698c31a4f3153d4ac72aa9e9bd Mon Sep 17 00:00:00 2001
+-From: Samuel Sapalski <samuel.sapalski@nokia.com>
+-Date: Wed, 3 Mar 2021 16:31:22 +0100
+-Subject: decompress_gunzip: Fix DoS if gzip is corrupt
+-
+-On certain corrupt gzip files, huft_build will set the error bit on
+-the result pointer. If afterwards abort_unzip is called huft_free
+-might run into a segmentation fault or an invalid pointer to
+-free(p).
+-
+-In order to mitigate this, we check in huft_free if the error bit
+-is set and clear it before the linked list is freed.
+-
+-Signed-off-by: Samuel Sapalski <samuel.sapalski@nokia.com>
+-Signed-off-by: Peter Kaestle <peter.kaestle@nokia.com>
+-Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
+----
+- archival/libarchive/decompress_gunzip.c | 12 ++++++++++--
+- 1 file changed, 10 insertions(+), 2 deletions(-)
+-
+---- a/archival/libarchive/decompress_gunzip.c
+-+++ b/archival/libarchive/decompress_gunzip.c
+-@@ -220,10 +220,20 @@ static const uint8_t border[] ALIGN1 = {
+-  * each table.
+-  * t: table to free
+-  */
+-+#define BAD_HUFT(p) ((uintptr_t)(p) & 1)
+-+#define ERR_RET     ((huft_t*)(uintptr_t)1)
+- static void huft_free(huft_t *p)
+- {
+- 	huft_t *q;
+- 
+-+	/*
+-+	 * If 'p' has the error bit set we have to clear it, otherwise we might run
+-+	 * into a segmentation fault or an invalid pointer to free(p)
+-+	 */
+-+	if (BAD_HUFT(p)) {
+-+		p = (huft_t*)((uintptr_t)(p) ^ (uintptr_t)(ERR_RET));
+-+	}
+-+
+- 	/* Go through linked list, freeing from the malloced (t[-1]) address. */
+- 	while (p) {
+- 		q = (--p)->v.t;
+-@@ -289,8 +299,6 @@ static unsigned fill_bitbuffer(STATE_PAR
+-  * or a valid pointer to a Huffman table, ORed with 0x1 if incompete table
+-  * is given: "fixed inflate" decoder feeds us such data.
+-  */
+--#define BAD_HUFT(p) ((uintptr_t)(p) & 1)
+--#define ERR_RET     ((huft_t*)(uintptr_t)1)
+- static huft_t* huft_build(const unsigned *b, const unsigned n,
+- 			const unsigned s, const struct cp_ext *cp_ext,
+- 			unsigned *m)
+diff --git a/package/utils/busybox/patches/010-fix-wrong-variable.patch b/package/utils/busybox/patches/010-fix-wrong-variable.patch
+deleted file mode 100644
+index 1b6fa7be61..0000000000
+--- a/package/utils/busybox/patches/010-fix-wrong-variable.patch
++++ /dev/null
+@@ -1,11 +0,0 @@
+---- a/libbb/update_passwd.c
+-+++ b/libbb/update_passwd.c
+-@@ -48,7 +48,7 @@ static void check_selinux_update_passwd(
+- 			bb_simple_error_msg_and_die("SELinux: access denied");
+- 	}
+- 	if (ENABLE_FEATURE_CLEAN_UP)
+--		freecon(context);
+-+		freecon(seuser);
+- }
+- #else
+- # define check_selinux_update_passwd(username) ((void)0)
+-- 
+2.30.2
+

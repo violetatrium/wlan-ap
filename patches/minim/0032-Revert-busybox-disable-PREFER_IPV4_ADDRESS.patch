@@ -1,0 +1,26 @@
+From 8148ab098d6ebb37cb4b14bfa5ed90a90d123b4d Mon Sep 17 00:00:00 2001
+From: Tom Keddie <github@bronwenandtom.com>
+Date: Mon, 8 May 2023 08:47:11 -0700
+Subject: [PATCH 32/37] Revert "busybox: disable PREFER_IPV4_ADDRESS"
+
+This reverts commit b62fa7453a864c555fbae0ea78cb76e27d0a0a96.
+---
+ package/utils/busybox/Config-defaults.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/package/utils/busybox/Config-defaults.in b/package/utils/busybox/Config-defaults.in
+index 168c73b24c..04148df267 100644
+--- a/package/utils/busybox/Config-defaults.in
++++ b/package/utils/busybox/Config-defaults.in
+@@ -2192,7 +2192,7 @@ config BUSYBOX_DEFAULT_FEATURE_UNIX_LOCAL
+ 	default n
+ config BUSYBOX_DEFAULT_FEATURE_PREFER_IPV4_ADDRESS
+ 	bool
+-	default n
++	default y
+ config BUSYBOX_DEFAULT_VERBOSE_RESOLUTION_ERRORS
+ 	bool
+ 	default y
+-- 
+2.30.2
+

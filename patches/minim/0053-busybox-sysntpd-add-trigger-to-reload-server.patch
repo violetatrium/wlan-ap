@@ -1,0 +1,73 @@
+From 88114f617ae7bffe13d19d7b9575659a3d3cd9b6 Mon Sep 17 00:00:00 2001
+From: Alexey Dobrovolsky <dobrovolskiy.alexey@gmail.com>
+Date: Sun, 6 Jun 2021 02:25:02 +0300
+Subject: [PATCH 53/61] busybox: sysntpd: add trigger to reload server
+
+sysntpd server becomes unavailable if the index of the bound
+interface changes. So let's add an interface trigger to reload sysntpd.
+
+This patch also adds the ability for the sysntpd script to handle
+uci interface name from configuration.
+
+Fixes: 4da60500ebd2 ("busybox: sysntpd: option to bind server to iface")
+Signed-off-by: Alexey Dobrovolsky <dobrovolskiy.alexey@gmail.com>
+Reviewed-by: Philip Prindeville <philipp@redfish-solutions.com>
+---
+ package/utils/busybox/files/sysntpd | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/package/utils/busybox/files/sysntpd b/package/utils/busybox/files/sysntpd
+index c4c311c242..074f14b8f8 100755
+--- a/package/utils/busybox/files/sysntpd
++++ b/package/utils/busybox/files/sysntpd
+@@ -56,7 +56,14 @@ start_ntpd_instance() {
+ 	procd_set_param command "$PROG" -n -N
+ 	if [ "$enable_server" = "1" ]; then
+ 		procd_append_param command -l
+-		[ -n "$interface" ] && procd_append_param command -I $interface
++		[ -n "$interface" ] && {
++			local ifname
++
++			network_get_device ifname "$interface" || \
++				ifname="$interface"
++			procd_append_param command -I "$ifname"
++			procd_append_param netdev "$ifname"
++		}
+ 	fi
+ 	[ -x "$HOTPLUG_SCRIPT" ] && procd_append_param command -S "$HOTPLUG_SCRIPT"
+ 	for peer in $server; do
+@@ -79,11 +86,12 @@ start_ntpd_instance() {
+ }
+ 
+ start_service() {
++	. /lib/functions/network.sh
+ 	validate_ntp_section ntp start_ntpd_instance
+ }
+ 
+ service_triggers() {
+-	local script name use_dhcp
++	local script name use_dhcp enable_server interface
+ 
+ 	script=$(readlink -f "$initscript")
+ 	name=$(basename ${script:-$initscript})
+@@ -106,5 +114,17 @@ service_triggers() {
+ 		fi
+ 	}
+ 
++	config_get_bool enable_server ntp enable_server 0
++	config_get interface ntp interface
++
++	[ $enable_server -eq 1 ] && [ -n "$interface" ] && {
++		local ifname
++
++		network_get_device ifname "$interface" || \
++			ifname="$interface"
++		procd_add_interface_trigger "interface.*" "$ifname" \
++			/etc/init.d/"$name" reload
++	}
++
+ 	procd_add_validation validate_ntp_section
+ }
+-- 
+2.30.2
+

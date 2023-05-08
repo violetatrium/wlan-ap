@@ -1,0 +1,53 @@
+From 7fea9d9f5dd282a7049d77cc6b75e0a703ead26c Mon Sep 17 00:00:00 2001
+From: Baptiste Jonglez <git@bitsofnetworks.org>
+Date: Thu, 13 May 2021 19:50:22 +0200
+Subject: [PATCH 45/61] busybox: disable PREFER_IPV4_ADDRESS
+
+PREFER_IPV4_ADDRESS is broken on IPv6-only hosts, as it causes busybox
+utilities (ping, traceroute, ntpd) to forcibly use the A record instead of
+the AAAA record when resolving a DNS name.  This obviously fails when
+there is no IPv4 connectivity.  Since IPv6-only hosts or routers will only
+become more common over time, disable PREFER_IPV4_ADDRESS to support this
+use-case.
+
+As a side-effect, disabling PREFER_IPV4_ADDRESS changes the default
+resolution behaviour of busybox utilities on dual-stack hosts.  Busybox
+utilities now simply use the order given by getaddrinfo(), so they will
+now prefer IPv6 addresses when resolving a name with both A and AAAA
+records if there is IPv6 connectivity.  This is in line with RFC 6724.
+
+PREFER_IPV4_ADDRESS was likely intended to work around naive
+implementations of getaddrinfo() that could return AAAA records first,
+even on an IPv4-only host.  But both musl (since 1.1.3) and glibc
+correctly implement RFC 6724 for getaddrinfo() and check connectivity to
+determine the correct order in which to return records.  On IPv4-only
+hosts, getaddrinfo() will return A records first, so there is no need for
+the PREFER_IPV4_ADDRESS hack.
+
+See also: https://bugs.busybox.net/show_bug.cgi?id=12381
+
+Fixes: FS#84
+Fixes: FS#2608
+References: https://github.com/openwrt/openwrt/pull/4167
+Signed-off-by: Alexander Traud <pabstraud@compuserve.com>
+Signed-off-by: Baptiste Jonglez <git@bitsofnetworks.org>
+---
+ package/utils/busybox/Config-defaults.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/package/utils/busybox/Config-defaults.in b/package/utils/busybox/Config-defaults.in
+index 04148df267..168c73b24c 100644
+--- a/package/utils/busybox/Config-defaults.in
++++ b/package/utils/busybox/Config-defaults.in
+@@ -2192,7 +2192,7 @@ config BUSYBOX_DEFAULT_FEATURE_UNIX_LOCAL
+ 	default n
+ config BUSYBOX_DEFAULT_FEATURE_PREFER_IPV4_ADDRESS
+ 	bool
+-	default y
++	default n
+ config BUSYBOX_DEFAULT_VERBOSE_RESOLUTION_ERRORS
+ 	bool
+ 	default y
+-- 
+2.30.2
+

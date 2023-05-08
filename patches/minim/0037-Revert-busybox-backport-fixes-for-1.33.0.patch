@@ -1,0 +1,108 @@
+From 057fa6269de5490a614a7cc379a6eff32262f8f5 Mon Sep 17 00:00:00 2001
+From: Tom Keddie <github@bronwenandtom.com>
+Date: Mon, 8 May 2023 08:47:12 -0700
+Subject: [PATCH 37/37] Revert "busybox: backport fixes for 1.33.0"
+
+This reverts commit e17e212b51ac8b39778191f9be29d9c2f86989db.
+---
+ package/utils/busybox/Makefile                |  2 +-
+ ...backport1330fix-ash-make-strdup-copy.patch | 40 -------------------
+ .../002-backport1330fix-traceroute.patch      | 26 ------------
+ 3 files changed, 1 insertion(+), 67 deletions(-)
+ delete mode 100644 package/utils/busybox/patches/001-backport1330fix-ash-make-strdup-copy.patch
+ delete mode 100644 package/utils/busybox/patches/002-backport1330fix-traceroute.patch
+
+diff --git a/package/utils/busybox/Makefile b/package/utils/busybox/Makefile
+index 9df358ef78..3fef000c62 100644
+--- a/package/utils/busybox/Makefile
++++ b/package/utils/busybox/Makefile
+@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=busybox
+ PKG_VERSION:=1.33.0
+-PKG_RELEASE:=2
++PKG_RELEASE:=1
+ PKG_FLAGS:=essential
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+diff --git a/package/utils/busybox/patches/001-backport1330fix-ash-make-strdup-copy.patch b/package/utils/busybox/patches/001-backport1330fix-ash-make-strdup-copy.patch
+deleted file mode 100644
+index b495227d9f..0000000000
+--- a/package/utils/busybox/patches/001-backport1330fix-ash-make-strdup-copy.patch
++++ /dev/null
+@@ -1,40 +0,0 @@
+-From 67cc582d4289c5de521d11b08307c8ab26ee1e28 Mon Sep 17 00:00:00 2001
+-From: Denys Vlasenko <vda.linux@googlemail.com>
+-Date: Sun, 3 Jan 2021 10:55:39 +0100
+-Subject: ash: make a strdup copy of $HISTFILE for line editing
+-
+-Otherwise if $HISTFILE is unset or reassigned, bad things can happen.
+-
+-function                                             old     new   delta
+-ash_main                                            1210    1218      +8
+-
+-Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
+----
+- shell/ash.c | 4 ++--
+- 1 file changed, 2 insertions(+), 2 deletions(-)
+-
+-diff --git a/shell/ash.c b/shell/ash.c
+-index f16d7fb6a..ecbfbf091 100644
+---- a/shell/ash.c
+-+++ b/shell/ash.c
+-@@ -14499,7 +14499,7 @@ int ash_main(int argc UNUSED_PARAM, char **argv)
+- 
+- 	if (sflag || minusc == NULL) {
+- #if MAX_HISTORY > 0 && ENABLE_FEATURE_EDITING_SAVEHISTORY
+--		if (iflag) {
+-+		if (line_input_state) {
+- 			const char *hp = lookupvar("HISTFILE");
+- 			if (!hp) {
+- 				hp = lookupvar("HOME");
+-@@ -14513,7 +14513,7 @@ int ash_main(int argc UNUSED_PARAM, char **argv)
+- 				}
+- 			}
+- 			if (hp)
+--				line_input_state->hist_file = hp;
+-+				line_input_state->hist_file = xstrdup(hp);
+- # if ENABLE_FEATURE_SH_HISTFILESIZE
+- 			hp = lookupvar("HISTFILESIZE");
+- 			line_input_state->max_history = size_from_HISTFILESIZE(hp);
+--- 
+-cgit v1.2.1
+-
+diff --git a/package/utils/busybox/patches/002-backport1330fix-traceroute.patch b/package/utils/busybox/patches/002-backport1330fix-traceroute.patch
+deleted file mode 100644
+index eb03094eee..0000000000
+--- a/package/utils/busybox/patches/002-backport1330fix-traceroute.patch
++++ /dev/null
+@@ -1,26 +0,0 @@
+-From 89358a7131d3e75c74af834bb117b4fad7914983 Mon Sep 17 00:00:00 2001
+-From: Denys Vlasenko <vda.linux@googlemail.com>
+-Date: Tue, 2 Feb 2021 13:48:21 +0100
+-Subject: traceroute: fix option parsing
+-
+-Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
+----
+- networking/traceroute.c | 2 +-
+- 1 file changed, 1 insertion(+), 1 deletion(-)
+-
+-diff --git a/networking/traceroute.c b/networking/traceroute.c
+-index 3f1a9ab46..29f5e480b 100644
+---- a/networking/traceroute.c
+-+++ b/networking/traceroute.c
+-@@ -896,7 +896,7 @@ traceroute_init(int op, char **argv)
+- 
+- 	op |= getopt32(argv, "^"
+- 		OPT_STRING
+--		"\0" "-1:x-x" /* minimum 1 arg */
+-+		"\0" "-1" /* minimum 1 arg */
+- 		, &tos_str, &device, &max_ttl_str, &port_str, &nprobes_str
+- 		, &source, &waittime_str, &pausemsecs_str, &first_ttl_str
+- 	);
+--- 
+-cgit v1.2.1
+-
+-- 
+2.30.2
+

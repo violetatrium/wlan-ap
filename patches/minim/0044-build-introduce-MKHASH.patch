@@ -1,0 +1,54 @@
+From b993b68b6ca8444b5227a0c18df4600b37ac565c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Leonardo=20M=C3=B6rlein?= <me@irrelefant.net>
+Date: Sun, 9 May 2021 22:28:15 +0200
+Subject: [PATCH 44/61] build: introduce $(MKHASH)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Before this commit, it was assumed that mkhash is in the PATH. While
+this was fine for the normal build workflow, this led to some issues if
+
+    make TOPDIR="$(pwd)" -C "$pkgdir" compile
+
+was called manually. In most of the cases, I just saw warnings like this:
+
+    make: Entering directory '/home/.../package/gluon-status-page'
+    bash: line 1: mkhash: command not found
+    bash: line 1: mkhash: command not found
+    bash: line 1: mkhash: command not found
+    bash: line 1: mkhash: command not found
+    bash: line 1: mkhash: command not found
+    bash: line 1: mkhash: command not found
+    bash: line 1: mkhash: command not found
+    bash: line 1: mkhash: command not found
+    [...]
+
+While these were only warnings and the package still compiled sucessfully,
+I also observed that some package even fail to build because of this.
+
+After applying this commit, the variable $(MKHASH) is introduced. This
+variable points to $(STAGING_DIR_HOST)/bin/mkhash, which is always the
+correct path.
+
+Signed-off-by: Leonardo Mörlein <me@irrelefant.net>
+---
+ package/utils/busybox/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/package/utils/busybox/Makefile b/package/utils/busybox/Makefile
+index 475a154fa3..76a910361e 100644
+--- a/package/utils/busybox/Makefile
++++ b/package/utils/busybox/Makefile
+@@ -38,7 +38,7 @@ endif
+ include $(INCLUDE_DIR)/package.mk
+ 
+ ifeq ($(DUMP),)
+-  STAMP_CONFIGURED:=$(strip $(STAMP_CONFIGURED))_$(shell grep '^CONFIG_BUSYBOX_' $(TOPDIR)/.config | mkhash md5)
++  STAMP_CONFIGURED:=$(strip $(STAMP_CONFIGURED))_$(shell grep '^CONFIG_BUSYBOX_' $(TOPDIR)/.config | $(MKHASH) md5)
+ endif
+ 
+ # All files provided by busybox will serve as fallback alternatives by opkg.
+-- 
+2.30.2
+

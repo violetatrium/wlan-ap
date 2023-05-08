@@ -1,0 +1,34 @@
+From 0f36c08ce69b9bd17765d3c22f978fdce5547715 Mon Sep 17 00:00:00 2001
+From: Tom Keddie <github@bronwenandtom.com>
+Date: Mon, 8 May 2023 08:47:11 -0700
+Subject: [PATCH 27/37] Revert "busybox: update to 1.33.2 bugfix release"
+
+This reverts commit 5124b96e7235af834b18c98651267bf7baffcb02.
+---
+ package/utils/busybox/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/package/utils/busybox/Makefile b/package/utils/busybox/Makefile
+index a9d3013638..7ac042e9f7 100644
+--- a/package/utils/busybox/Makefile
++++ b/package/utils/busybox/Makefile
+@@ -5,14 +5,14 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=busybox
+-PKG_VERSION:=1.33.2
++PKG_VERSION:=1.33.1
+ PKG_RELEASE:=$(AUTORELEASE)
+ PKG_FLAGS:=essential
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+ PKG_SOURCE_URL:=https://www.busybox.net/downloads \
+ 		http://sources.buildroot.net
+-PKG_HASH:=6843ba7977081e735fa0fdb05893e3c002c8c5ad7c9c80da206e603cc0ac47e7
++PKG_HASH:=12cec6bd2b16d8a9446dd16130f2b92982f1819f6e1c5f5887b6db03f5660d28
+ 
+ PKG_BUILD_DEPENDS:=BUSYBOX_CONFIG_PAM:libpam
+ PKG_BUILD_PARALLEL:=1
+-- 
+2.30.2
+

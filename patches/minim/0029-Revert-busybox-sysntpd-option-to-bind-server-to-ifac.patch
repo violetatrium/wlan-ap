@@ -1,0 +1,44 @@
+From 83c0589905f7e43b4517ec4d07709f71a677bfa6 Mon Sep 17 00:00:00 2001
+From: Tom Keddie <github@bronwenandtom.com>
+Date: Mon, 8 May 2023 08:47:11 -0700
+Subject: [PATCH 29/37] Revert "busybox: sysntpd: option to bind server to
+ iface"
+
+This reverts commit a75928d1259e52e52b1991a4dc39df61ba3c9206.
+---
+ package/utils/busybox/files/sysntpd | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/package/utils/busybox/files/sysntpd b/package/utils/busybox/files/sysntpd
+index c4c311c242..e4a070762f 100755
+--- a/package/utils/busybox/files/sysntpd
++++ b/package/utils/busybox/files/sysntpd
+@@ -30,12 +30,7 @@ get_dhcp_ntp_servers() {
+ 
+ validate_ntp_section() {
+ 	uci_load_validate system timeserver "$1" "$2" \
+-		'dhcp_interface:list(string)' \
+-		'enable_server:bool:0' \
+-		'enabled:bool:1' \
+-		'interface:string' \
+-		'server:list(host)' \
+-		'use_dhcp:bool:1'
++		'server:list(host)' 'enabled:bool:1' 'enable_server:bool:0' 'use_dhcp:bool:1' 'dhcp_interface:list(string)'
+ }
+ 
+ start_ntpd_instance() {
+@@ -54,10 +49,7 @@ start_ntpd_instance() {
+ 
+ 	procd_open_instance
+ 	procd_set_param command "$PROG" -n -N
+-	if [ "$enable_server" = "1" ]; then
+-		procd_append_param command -l
+-		[ -n "$interface" ] && procd_append_param command -I $interface
+-	fi
++	[ "$enable_server" = "1" ] && procd_append_param command -l
+ 	[ -x "$HOTPLUG_SCRIPT" ] && procd_append_param command -S "$HOTPLUG_SCRIPT"
+ 	for peer in $server; do
+ 		procd_append_param command -p $peer
+-- 
+2.30.2
+

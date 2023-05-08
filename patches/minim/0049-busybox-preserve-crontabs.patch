@@ -1,0 +1,67 @@
+From b810d649fb276e7bea276ebf73cd2a76a089082b Mon Sep 17 00:00:00 2001
+From: Philip Prindeville <philipp@redfish-solutions.com>
+Date: Wed, 5 May 2021 17:43:55 -0600
+Subject: [PATCH 49/61] busybox: preserve crontabs
+
+/etc/syslog.conf is used by sysklogd, and /etc/crontabs is used
+by crond, both features of busybox.  Given this, ownership for
+these files should be bound to busybox, especially if one day
+there's a way to do an in-place opkg update of busybox.
+
+There's also the busybox provided syslogd which uses this file
+if CONFIG_BUSYBOX_FEATURE_SYSLOGD_CFG is set.
+
+Signed-off-by: Philip Prindeville <philipp@redfish-solutions.com>
+---
+ package/utils/busybox/Makefile | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/package/utils/busybox/Makefile b/package/utils/busybox/Makefile
+index c2f1c1be45..1e7d9dd333 100644
+--- a/package/utils/busybox/Makefile
++++ b/package/utils/busybox/Makefile
+@@ -73,14 +73,25 @@ define Package/busybox/config
+ 	source "$(SOURCE)/Config.in"
+ endef
+ 
+-ifdef CONFIG_BUSYBOX_CONFIG_FEATURE_SYSLOG
+-define Package/busybox/conffiles
++ifneq ($(CONFIG_BUSYBOX_$(BUSYBOX_SYM)_FEATURE_SYSLOG)$(CONFIG_BUSYBOX_$(BUSYBOX_SYM)_FEATURE_SYSLOGD_CFG),)
++define Package/busybox/conffiles/syslog
+ /etc/syslog.conf
+ endef
++endif
+ 
+-Package/busybox-selinux/conffiles = $(Package/busybox/conffiles)
++ifneq ($(CONFIG_BUSYBOX_$(BUSYBOX_SYM)_CROND),)
++define Package/busybox/conffiles/crond
++/etc/crontabs/
++endef
+ endif
+ 
++define Package/busybox/conffiles
++$(Package/busybox/conffiles/syslog)
++$(Package/busybox/conffiles/crond)
++endef
++
++Package/busybox-selinux/conffiles = $(Package/busybox/conffiles)
++
+ ifndef CONFIG_USE_MUSL
+ LDLIBS:=m crypt
+ endif
+@@ -129,8 +140,12 @@ define Package/busybox/install
+ 	$(INSTALL_DIR) $(1)/etc/init.d
+ 	$(INSTALL_DIR) $(1)/usr/sbin
+ 	$(CP) $(PKG_INSTALL_DIR)/* $(1)/
++ifneq ($(CONFIG_BUSYBOX_$(BUSYBOX_SYM)_FEATURE_SYSLOG)$(CONFIG_BUSYBOX_$(BUSYBOX_SYM)_FEATURE_SYSLOGD_CFG),)
++	touch $(1)/etc/syslog.conf
++endif
+ ifneq ($(CONFIG_BUSYBOX_$(BUSYBOX_SYM)_CROND),)
+ 	$(INSTALL_BIN) ./files/cron $(1)/etc/init.d/cron
++	$(INSTALL_DIR) $(1)/etc/crontabs
+ endif
+ ifneq ($(CONFIG_BUSYBOX_$(BUSYBOX_SYM)_NTPD),)
+ 	$(INSTALL_BIN) ./files/sysntpd $(1)/etc/init.d/sysntpd
+-- 
+2.30.2
+

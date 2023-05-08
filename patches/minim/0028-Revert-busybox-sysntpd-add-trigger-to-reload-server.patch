@@ -1,0 +1,65 @@
+From 277e11ad07eaaa21e361212ab0e21ffacebf580d Mon Sep 17 00:00:00 2001
+From: Tom Keddie <github@bronwenandtom.com>
+Date: Mon, 8 May 2023 08:47:11 -0700
+Subject: [PATCH 28/37] Revert "busybox: sysntpd: add trigger to reload server"
+
+This reverts commit 9fa925362f285614e90c2d7a286efd9d3d41db45.
+---
+ package/utils/busybox/files/sysntpd | 24 ++----------------------
+ 1 file changed, 2 insertions(+), 22 deletions(-)
+
+diff --git a/package/utils/busybox/files/sysntpd b/package/utils/busybox/files/sysntpd
+index 074f14b8f8..c4c311c242 100755
+--- a/package/utils/busybox/files/sysntpd
++++ b/package/utils/busybox/files/sysntpd
+@@ -56,14 +56,7 @@ start_ntpd_instance() {
+ 	procd_set_param command "$PROG" -n -N
+ 	if [ "$enable_server" = "1" ]; then
+ 		procd_append_param command -l
+-		[ -n "$interface" ] && {
+-			local ifname
+-
+-			network_get_device ifname "$interface" || \
+-				ifname="$interface"
+-			procd_append_param command -I "$ifname"
+-			procd_append_param netdev "$ifname"
+-		}
++		[ -n "$interface" ] && procd_append_param command -I $interface
+ 	fi
+ 	[ -x "$HOTPLUG_SCRIPT" ] && procd_append_param command -S "$HOTPLUG_SCRIPT"
+ 	for peer in $server; do
+@@ -86,12 +79,11 @@ start_ntpd_instance() {
+ }
+ 
+ start_service() {
+-	. /lib/functions/network.sh
+ 	validate_ntp_section ntp start_ntpd_instance
+ }
+ 
+ service_triggers() {
+-	local script name use_dhcp enable_server interface
++	local script name use_dhcp
+ 
+ 	script=$(readlink -f "$initscript")
+ 	name=$(basename ${script:-$initscript})
+@@ -114,17 +106,5 @@ service_triggers() {
+ 		fi
+ 	}
+ 
+-	config_get_bool enable_server ntp enable_server 0
+-	config_get interface ntp interface
+-
+-	[ $enable_server -eq 1 ] && [ -n "$interface" ] && {
+-		local ifname
+-
+-		network_get_device ifname "$interface" || \
+-			ifname="$interface"
+-		procd_add_interface_trigger "interface.*" "$ifname" \
+-			/etc/init.d/"$name" reload
+-	}
+-
+ 	procd_add_validation validate_ntp_section
+ }
+-- 
+2.30.2
+
