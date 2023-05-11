@@ -17,6 +17,7 @@ packages:
   - samba-manager
   - samba4-server
   - ntfs-3g
+  - hfsfsck
 diffconfig: |
   CONFIG_VERSION_PRODUCT="minim_r14"
   CONFIG_VERSION_HWREV=""
