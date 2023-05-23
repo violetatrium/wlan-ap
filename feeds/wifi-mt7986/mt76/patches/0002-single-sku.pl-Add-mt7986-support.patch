@@ -1,0 +1,377 @@
+From 8faa11a54222e063921c083934323630523f942f Mon Sep 17 00:00:00 2001
+From: Brett Mastbergen <brettm@minim.com>
+Date: Mon, 27 Feb 2023 11:13:12 -0500
+Subject: [PATCH] single-sku.pl: Add mt7986 support
+
+mt7986 (which embeds mt7915) has a few differences from
+mt7615:
+	* it uses commas to seperate fields instead of
+	  whitespace.
+
+	* mt7915 driver support expects all cck, ofdm, and mcs
+	  values to be defined for all channels on both bands
+
+	* mt7915 supports ax rates (rates-ru).
+
+	* the sku data file does not include txs delta values
+
+	* per band,channel,rate tx power backoff values for
+	  beam forming are specified in a second dat file
+---
+ scripts/single-sku.pl | 272 +++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 240 insertions(+), 32 deletions(-)
+
+diff --git a/scripts/single-sku.pl b/scripts/single-sku.pl
+index 9e381d2a..c7b02cd5 100644
+--- a/scripts/single-sku.pl
++++ b/scripts/single-sku.pl
+@@ -7,7 +7,8 @@ my $indent = 0;
+ my %chip_types = (
+ 	mt7615 => "mt7615",
+ 	mt7622 => "mt7615",
+-	mt7663 => "mt7615"
++	mt7663 => "mt7615",
++	mt7986 => "mt7915"
+ );
+ 
+ my $chip = shift @ARGV;
+@@ -40,6 +41,83 @@ sub convert_array($) {
+ 	return $array;
+ }
+ 
++sub parse_backoff_channel($$$) {
++	my $band = shift;
++	my $channels = $band->{channels};
++
++	my $ch = shift;
++	my $line = shift;
++
++	my @data;
++	@data = split /,/, $line;
++	my $data = join(" ", @data);
++
++	my $channel = $channels->{$ch};
++
++	$channel->{"paths-cck"} = convert_array([
++		$data[0], $data[1],
++		$data[2], $data[3]
++	]);
++	splice @data, 0, 4;
++
++	$channel->{"paths-ofdm"} = convert_array([
++		$data[0], $data[1],
++		$data[2], $data[3],
++	]);
++	splice @data, 0, 4;
++
++	$channel->{"paths-ofdm-bf"} = convert_array([
++		0,        $data[0],
++		$data[1], $data[2],
++	]);
++	splice @data, 0, 3;
++
++	my @ru = ( "bw20/ru242", "bw40/ru484", "bw80/ru996", "bw160/ru2x996" );
++
++	foreach my $ru (@ru) {
++		push @{$channel->{"paths-ru"}}, convert_array([
++			$data[0], $data[1],
++			$data[2], $data[3],
++			$data[4], $data[5],
++			$data[6], $data[7],
++			$data[8], $data[9],
++		]);
++		splice @data, 0, 10;
++
++		push @{$channel->{"paths-ru-bf"}}, convert_array([
++			0,        $data[0],
++			$data[1], $data[2],
++			$data[3], $data[4],
++			$data[5], $data[6],
++			$data[7], $data[8],
++		]);
++		splice @data, 0, 9;
++	};
++
++	@ru = ( "ru26", "ru52", "ru106" );
++
++	foreach my $ru (@ru) {
++		push @{$channel->{"paths-ru"}}, convert_array([
++			$data[0], $data[1],
++			$data[2], $data[3],
++			$data[4], $data[5],
++			$data[6], $data[7],
++			$data[8], $data[9],
++		]);
++		splice @data, 0, 10;
++
++		push @{$channel->{"paths-ru-bf"}}, convert_array([
++			$data[0], $data[1],
++			$data[2], $data[3],
++			$data[4], $data[5],
++			$data[6], $data[7],
++			$data[8], $data[9],
++		]);
++		splice @data, 0, 10;
++	};
++}
++
++
+ sub parse_channel($$$) {
+ 	my $band = shift;
+ 	my $channels = $band->{channels};
+@@ -47,53 +125,127 @@ sub parse_channel($$$) {
+ 	my $ch = shift;
+ 	my $line = shift;
+ 
+-	my @data = split /\s+/, $line;
++	my @data;
++	if ($chip_type eq 'mt7915') {
++		@data = split /,/, $line;
++	} else {
++		@data = split /\s+/, $line;
++	}
+ 	my $data = join(" ", @data);
+ 
+ 	my $channel = {
+ 		chlist => [ ],
+ 		data => $data,
+ 		mcs => [],
++		ru => [],
+ 	};
+ 
+ 	$channels->{$ch} = $channel;
+ 
+-	$band->{type} eq '2' and do {
++
++	if ($chip_type eq 'mt7915') {
+ 		$channel->{"rates-cck"} = convert_array([
+-			$data[0], $data[0],
+-			$data[1], $data[1]
++			$data[0], $data[1],
++			$data[2], $data[3]
+ 		]);
+-		splice @data, 0, 2;
+-	};
++		splice @data, 0, 4;
+ 
+-	$channel->{"rates-ofdm"} = convert_array([
+-		$data[0], $data[0],
+-		$data[1], $data[1],
+-		$data[2], $data[2],
+-		$data[3], $data[4]
+-	]);
+-	splice @data, 0, 5;
++		$channel->{"rates-ofdm"} = convert_array([
++			$data[0], $data[1],
++			$data[2], $data[3],
++			$data[4], $data[5],
++			$data[6], $data[7]
++		]);
++		splice @data, 0, 8;
++	} else {
+ 
+-	my @bw = ( "bw20", "bw40", "bw80", "bw160" );
+-	$band->{type} eq '2' and @bw = ( "bw20", "bw40" );
++		$band->{type} eq '2' and do {
++			$channel->{"rates-cck"} = convert_array([
++				$data[0], $data[0],
++				$data[1], $data[1]
++			]);
++			splice @data, 0, 2;
++		};
+ 
+-	foreach my $bw (@bw) {
+-		push @{$channel->{"rates-mcs"}}, convert_array([
+-			$data[0],
++		$channel->{"rates-ofdm"} = convert_array([
++			$data[0], $data[0],
+ 			$data[1], $data[1],
+ 			$data[2], $data[2],
+-			$data[3], $data[3],
+-			$data[4],
+-			$data[5],
+-			$data[6],
++			$data[3], $data[4]
+ 		]);
+-		splice @data, 0, 7;
+-	};
++		splice @data, 0, 5;
++	}
+ 
+-	@data > 0 and do {
+-		$channel->{"txs-delta"} = convert_array([ reverse splice @data, 0, 3 ]);
+-		delete $channel->{"txs-delta"} if join("", @{$channel->{"txs-delta"}}) =~ /^0+$/;
+-	};
++	my @bw = ( "bw20", "bw40", "bw80", "bw160" );
++
++	if ($chip_type eq 'mt7915') {
++		foreach my $bw (@bw) {
++			push @{$channel->{"rates-mcs"}}, convert_array([
++				$data[0], $data[1],
++				$data[2], $data[3],
++				$data[4], $data[5],
++				$data[6], $data[7],
++				$data[8], $data[9],
++			]);
++
++			if ($bw eq 'bw40') {
++				splice @data, 0, 13;
++			} else {
++				splice @data, 0, 12;
++			}
++		};
++
++		my @ru = ( "ru26", "ru52", "ru106", "ru242", "ru484", "ru996", "ru996x2" );
++
++		foreach my $ru (@ru) {
++			push @{$channel->{"rates-ru"}}, convert_array([
++				$data[0], $data[1],
++				$data[2], $data[3],
++				$data[4], $data[5],
++				$data[6], $data[7],
++				$data[8], $data[9],
++				$data[10], $data[11],
++			]);
++			splice @data, 0, 12;
++		};
++	} else {
++		$band->{type} eq '2' and @bw = ( "bw20", "bw40" );
++		foreach my $bw (@bw) {
++			push @{$channel->{"rates-mcs"}}, convert_array([
++				$data[0],
++				$data[1], $data[1],
++				$data[2], $data[2],
++				$data[3], $data[3],
++				$data[4],
++				$data[5],
++				$data[6],
++			]);
++			splice @data, 0, 7;
++		};
++
++		@data > 0 and do {
++			$channel->{"txs-delta"} = convert_array([ reverse splice @data, 0, 3 ]);
++			delete $channel->{"txs-delta"} if join("", @{$channel->{"txs-delta"}}) =~ /^0+$/;
++		};
++	}
++}
++
++sub read_backoff_data($$) {
++	my $file = shift;
++	my $bands = shift;
++	my $band;
++
++	open FILE, "<", $file or die "Can't open file $file\n";
++	while (<FILE>) {
++		chomp;
++
++		(/^Band: (2.4|5)G,/ or /^Band: (2.4|5)G /) and do {
++			$band = $1;
++			$band eq '2.4' and $band = "2";
++		};
++		(/^Ch(\d+),+(.+?)\s*$/ or /^Ch(\d+)\s+(.+?)\s*$/) and parse_backoff_channel($bands->{$band}, $1, $2);
++	}
++	close FILE;
+ }
+ 
+ sub read_data($) {
+@@ -105,7 +257,7 @@ sub read_data($) {
+ 	while (<FILE>) {
+ 		chomp;
+ 
+-		/^Band: (2.4|5)G / and do {
++		(/^Band: (2.4|5)G,/ or /^Band: (2.4|5)G /) and do {
+ 			$band = $1;
+ 			$band eq '2.4' and $band = "2";
+ 			$bands{$band} = {
+@@ -113,7 +265,7 @@ sub read_data($) {
+ 				channels => {},
+ 			};
+ 		};
+-		/^Ch(\d+)\s+(.+?)\s*$/ and parse_channel($bands{$band}, $1, $2);
++		(/^Ch(\d+),+(.+?)\s*$/ or /^Ch(\d+)\s+(.+?)\s*$/) and parse_channel($bands{$band}, $1, $2);
+ 	}
+ 	close FILE;
+ 
+@@ -223,6 +375,7 @@ sub add_multi_array($$) {
+ sub print_txpower($) {
+ 	my $ch = shift;
+ 	my @data;
++	my @ru_data;
+ 
+ 	add_named_array($ch, "txs-delta");
+ 	add_named_array($ch, "rates-cck");
+@@ -242,6 +395,55 @@ sub print_txpower($) {
+ 	}
+ 
+ 	add_multi_array("rates-mcs", \@data);
++
++	$prev = undef;
++	foreach my $v (@{$ch->{"rates-ru"}}) {
++		my $val = [1, @{$v}];
++
++		if ($prev and (array_str($v) eq array_str($prev))) {
++			$ru_data[$#ru_data]->[0]++;
++		} else {
++			push @ru_data, $val;
++		}
++
++		$prev = $v;
++	}
++	add_multi_array("rates-ru", \@ru_data);
++
++	add_named_array($ch, "paths-cck");
++	add_named_array($ch, "paths-ofdm");
++	add_named_array($ch, "paths-ofdm-bf");
++
++	$prev = undef;
++	@ru_data = ();
++	foreach my $v (@{$ch->{"paths-ru"}}) {
++		my $val = [1, @{$v}];
++
++		if ($prev and (array_str($v) eq array_str($prev))) {
++			$ru_data[$#ru_data]->[0]++;
++		} else {
++			push @ru_data, $val;
++		}
++
++		$prev = $v;
++	}
++	add_multi_array("paths-ru", \@ru_data);
++
++	$prev = undef;
++	@ru_data = ();
++	foreach my $v (@{$ch->{"paths-ru-bf"}}) {
++		my $val = [1, @{$v}];
++
++		if ($prev and (array_str($v) eq array_str($prev))) {
++			$ru_data[$#ru_data]->[0]++;
++		} else {
++			push @ru_data, $val;
++		}
++
++		$prev = $v;
++	}
++	add_multi_array("paths-ru-bf", \@ru_data);
++
+ };
+ 
+ sub print_channels($) {
+@@ -302,7 +504,13 @@ while (@ARGV > 0) {
+ 	} elsif ($arg =~ /regdomain=(\w+)$/) {
+ 		push @{$cur->{regdomain}}, $1;
+ 	} else {
+-		$cur->{bands} = read_data($arg);
++		if ($chip_type eq 'mt7915') {
++			$cur->{bands} = read_data($arg);
++			$arg = shift @ARGV;
++			read_backoff_data($arg, $cur->{bands});
++		} else {
++			$cur->{bands} = read_data($arg);
++		}
+ 		push @files, $cur;
+ 		$cur = undef;
+ 	}
+-- 
+2.30.2
+
