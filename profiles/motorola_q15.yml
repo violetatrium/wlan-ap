@@ -1,0 +1,25 @@
+---
+profile: motorola_q15
+target: ipq807x
+subtarget: ipq50xx
+description: Build image for the Motorola Q15
+image: bin/targets/ipq807x/ipq50xx/openwrt-ipq807x-motorola_q15-squashfs-sysupgrade.tar
+feeds:
+  - name: ipq807x
+    path: ../../feeds/ipq807x
+include:
+  - wifi-ax
+  - minim
+packages:
+  - e2fsprogs
+  - kmod-block2mtd
+  - q14-uled-driver
+diffconfig: |
+  CONFIG_KERNEL_IPQ_MEM_PROFILE=512
+  CONFIG_VERSION_PRODUCT="minim_q15"
+  CONFIG_VERSION_HWREV=""
+  # CONFIG_PACKAGE_wpad is not set
+  CONFIG_PACKAGE_wpad-openssl=y
+  CONFIG_LIBCURL_OPENSSL=y
+  # CONFIG_LIBCURL_WOLFSSL is not set
+  # CONFIG_PACKAGE_libwolfssl is not set
